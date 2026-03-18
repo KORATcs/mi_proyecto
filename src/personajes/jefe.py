@@ -9,4 +9,4 @@ class Jefe(Personaje):
 
     def atacar(self, Personaje):
         print(f"{self.nombre} ataca a {Personaje.nombre}")
-        return Personaje.recibir_daño(self.ataque)
+        return Personaje.recibir_danio(self.ataque)
