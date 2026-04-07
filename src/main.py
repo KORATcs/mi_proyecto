@@ -1,25 +1,34 @@
 #VIDEOJUEGO DE PLATAFORMAS
-from personajes.personaje import Personaje
-from personajes.enemigos import Enemigo
-from personajes.hoku import Hoku
-from personajes.jefe import Jefe
+#IMPORTACIONES
+from personajes.enemigos.enemigos import Enemigo
+from personajes.protagonista.hoku import Hoku
+from personajes.enemigos.bichiluz import Bichiluz
+from personajes.enemigos.perruga import Perruga
+from personajes.enemigos.hibrido import Hibrido
+from personajes.enemigos.medaña import Medaña
+from personajes.jefes.cabra_de_fuego import CabraDeFuego
 
 #PERSONAJE PRINCIPAL "HOKU"
-#Pequeño extraterrestre, hibrido, similar a un zorro del desierto, que puede consumir habilidades de los jefes para avanzar por los mapas.
-Hoku = Hoku()
+"""Pequeño extraterrestre, hibrido, similar a un zorro del desierto, 
+que puede consumir habilidades de los jefes para avanzar por los mundos"""
+Hoku = Hoku() #unico protagonista
 
 #ENEMIGOS
-#Pequeños enemigos que pueden o no atacar a Hoku. Estan esparcidos por todo el nivel. 
-#Son sencillos de derrotar, pueden evitarse igualmente.
-enemigo = Enemigo("Bichito de Luz", 150) #pequeño insecto brillant
-enemigo2 = Enemigo("Larva Curvada", 150) #larva gigante con varias curvas
-enemigo3 = Enemigo("Araña Letal", 300) #araña venenosa
-enemigo4 = Enemigo("Polilla X", 250) #polilla gigante
-enemigo5 = Enemigo("Hibrido", 400) #gatito fisionado con una medusa
+"""Pequeños enemigos que pueden o no atacar a Hoku. Estan esparcidos por todo el nivel.
+Son sencillos de derrotar, pueden evitarse igualmente."""
+enemigo = Bichiluz() #enemigo que se mantiene en su lugar
+enemigo2 = Perruga() #enemigo con recorrido automatico, huele el suelo como un perro en busqueda de presas
+enemigo3 = Medaña() #como toda araña es timido, esta en su cueva o rincon, pero si alguien se acerca no duda en protegerse
+enemigo4 = Hibrido() #es mas violento que el resto, pero no es tan complejo de vencer
 
-#JEFE PRINCIPAL DEL NIVEL
-#Es un jefe que va a tener que derrotarse obligatoriamente para consumir su poder y avanzar al siguiente nivel.
-jefe = Jefe("Ala Mayor", 2000) #VA A SER UN AVE FENIX
+#JEFE
+jefe = CabraDeFuego()
 
 #LLAMADO DE LAS FUNCIONES
-#Hoku.mostrar_estado()
+Hoku.mostrar_estado()
+jefe.mostrar_estado()
+enemigo.mostrar_estado()
+enemigo2.mostrar_estado()
+enemigo3.mostrar_estado()
+enemigo4.mostrar_estado()
+
