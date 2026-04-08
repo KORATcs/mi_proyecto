@@ -1,9 +1,9 @@
 import unittest
-from src.personajes.enemigos.enemigos import Enemigo
-from src.personajes.enemigos.bichiluz import Bichiluz
-from src.personajes.enemigos.hibrido import Hibrido
-from src.personajes.enemigos.medania import Medania
-from src.personajes.enemigos.perruga import Perruga
+from src.modelos.personajes.enemigos.enemigos import Enemigo
+from src.modelos.personajes.enemigos.bichiluz import Bichiluz
+from src.modelos.personajes.enemigos.hibrido import Hibrido
+from src.modelos.personajes.enemigos.medania import Medania
+from src.modelos.personajes.enemigos.perruga import Perruga
 """TESTS PARA LA CLASE ENEMIGO (y todas sus subclases correspondientes)"""
 
 class TestEnemigo(unittest.TestCase):

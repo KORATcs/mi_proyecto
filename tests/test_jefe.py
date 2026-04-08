@@ -1,7 +1,7 @@
 import unittest
-from src.personajes.jefes.jefe import Jefe
-from src.personajes.jefes.cabra_de_fuego import CabraDeFuego
-from src.personajes.protagonista.hoku import Hoku
+from src.modelos.personajes.jefes.jefe import Jefe
+from src.modelos.personajes.jefes.cabra_de_fuego import CabraDeFuego
+from src.modelos.personajes.protagonista.hoku import Hoku
 from src.excepciones.excepciones import JefeNoDerrotadoError
 """TESTS PARA LA CLASE JEFE (y todas sus subclases correspondientes)"""
 

@@ -1,50 +1,98 @@
-#VIDEOJUEGO DE PLATAFORMAS
-#IMPORTACIONES
-from src. personajes.enemigos.enemigos import Enemigo
-from src. personajes.protagonista.hoku import Hoku
-from src. personajes.enemigos.bichiluz import Bichiluz
-from src. personajes.enemigos.perruga import Perruga
-from src. personajes.enemigos.hibrido import Hibrido
-from src. personajes.enemigos.medania import Medania
-from src. personajes.jefes.cabra_de_fuego import CabraDeFuego
-from src. personajes.npc.fuego_fatuo import FuegoFatuo
-from src. interactuable.interactuable import Interactuable
-from src. objetos.palancas import Palancas
-from src. objetos.puertas import Puertas
+import pygame
+import sys
 
-#PERSONAJE PRINCIPAL "HOKU"
-"""Pequenio extraterrestre, hibrido, similar a un zorro del desierto, 
-que puede consumir habilidades de los jefes para avanzar por los mundos"""
-Hoku = Hoku() #unico protagonista
+# 1. IMPORTACIONES
+from src.modelos.personajes.protagonista.hoku import Hoku
+from src.modelos.personajes.jefes.cabra_de_fuego import CabraDeFuego
+from src.vistas.personaje_grafico import PersonajeGrafico
 
-#ENEMIGOS
-"""Pequenios enemigos que pueden o no atacar a Hoku. Estan esparcidos por todo el nivel.
-Son sencillos de derrotar, pueden evitarse igualmente."""
-Bichiluz = Bichiluz() #enemigo que se mantiene en su lugar
-Perruga = Perruga() #enemigo con recorrido automatico, huele el suelo como un perro en busqueda de presas
-Medania = Medania() #como toda arania es timido, esta en su cueva o rincon, pero si alguien se acerca no duda en protegerse
-Hibrido = Hibrido() #es mas violento que el resto, pero no es tan complejo de vencer
+def main():
+    pygame.init()
+    ANCHO, ALTO = 800, 600
+    pantalla = pygame.display.set_mode((ANCHO, ALTO))
+    pygame.display.set_caption("Hoku - Prototipo de juego")
+    fuente = pygame.font.SysFont("Arial", 50, bold=True)
+    
+    NEGRO = (0, 0, 0)
+    ROSA = (255, 182, 193)
+    NARANJA = (255, 140, 0)
+    VELOCIDAD = 5
+    FPS = 75
+    
+    hoku_logico = Hoku()
+    jefe_logico = CabraDeFuego()
+    jefe_derrotado = False
 
-#JEFE
-"""Enemigo mas poderoso, que se encuentra al final de cada mundo. Para avanzar al siguiente mundo, 
-Hoku debe derrotar al jefe y consumir su habilidad especial"""
-jefe = CabraDeFuego()
+    hoku_vista = PersonajeGrafico(100, 100, 60, 60, ROSA)
+    jefe_vista = PersonajeGrafico(500, 300, 80, 80, NARANJA)
 
-#PERSONAJES NO JUGABLES
-FuegoFatuo = FuegoFatuo() #NPC que se encuentra en el mundo 1, ayuda a Hoku a atravesar la grieta que se encuentra en una cumbre
+    limite_pantalla = pygame.Rect(0, 0, ANCHO, ALTO)
+    reloj = pygame.time.Clock()
+    corriendo = True
 
-#OBJETOS
-palanca = Palancas()
-puerta = Puertas()
+    while corriendo:
+        # 1. GUARDAR POSICIONES
+        pos_ant_hoku = hoku_vista.rect.topleft
+        pos_ant_jefe = jefe_vista.rect.topleft
 
-#===================================================== INVOCACIONES =====================================================================================
-#Perruga.ataque_especial(Hoku)
-#Hibrido.ataque_especial(Hoku)
+        # A. EVENTOS
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                corriendo = False
+            
+            if evento.type == pygame.KEYDOWN and not jefe_derrotado:
+                if evento.key == pygame.K_SPACE:
+                    pos_hoku = pygame.Vector2(hoku_vista.rect.center)
+                    pos_jefe = pygame.Vector2(jefe_vista.rect.center)
+                    distancia = pos_hoku.distance_to(pos_jefe)
+                    RANGO_ATAQUE = 100 
 
-#FuegoFatuo.interactuar(Hoku)
-#palanca.interactuar(Hoku)
-#puerta.interactuar(Hoku)
+                    if distancia <= RANGO_ATAQUE:
+                        hoku_logico.atacar(jefe_logico)
+                        if jefe_logico._vida <= 0:
+                            jefe_derrotado = True
 
-Hoku.atacar(jefe)
-jefe.otorgar_recompensa(Hoku)
-Hoku.lanzar_habilidad(jefe.habilidad_otorgada, Bichiluz)
+        # B. MOVIMIENTO (Solo si el jefe está vivo)
+        teclas = pygame.key.get_pressed()
+        if not jefe_derrotado:
+            dx, dy = 0, 0
+            if teclas[pygame.K_w]: dy -= VELOCIDAD
+            if teclas[pygame.K_s]: dy += VELOCIDAD
+            if teclas[pygame.K_a]: dx -= VELOCIDAD
+            if teclas[pygame.K_d]: dx += VELOCIDAD
+            hoku_vista.mover(dx, dy, limite_pantalla)
+
+            jx, jy = 0, 0
+            if teclas[pygame.K_UP]:    jy -= VELOCIDAD
+            if teclas[pygame.K_DOWN]:  jy += VELOCIDAD
+            if teclas[pygame.K_LEFT]:  jx -= VELOCIDAD
+            if teclas[pygame.K_RIGHT]: jx += VELOCIDAD
+            jefe_vista.mover(jx, jy, limite_pantalla)
+
+            # C. COLISIÓN
+            if hoku_vista.colisiona_con(jefe_vista):
+                hoku_vista.rect.topleft = pos_ant_hoku
+                jefe_vista.rect.topleft = pos_ant_jefe
+
+        # D. RENDERIZADO (Todo esto debe estar DENTRO del while)
+        pantalla.fill(NEGRO)
+        
+        if not jefe_derrotado:
+            hoku_vista.dibujar(pantalla)
+            jefe_vista.dibujar(pantalla)
+        else:
+            # Mensaje de victoria
+            mensaje = fuente.render("¡EL JEFE HA MUERTO!", True, (255, 255, 0))
+            rect_texto = mensaje.get_rect(center=(ANCHO // 2, ALTO // 2))
+            pantalla.blit(mensaje, rect_texto)
+            # Dibujamos a Hoku solo para que se vea en la pantalla final
+            hoku_vista.dibujar(pantalla)
+
+        pygame.display.flip()
+        reloj.tick(FPS)
+
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()

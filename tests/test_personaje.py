@@ -1,6 +1,6 @@
 import unittest
-from src.personajes.personaje import Personaje
-from src.personajes.protagonista.hoku import Hoku
+from src.modelos.personajes.personaje import Personaje
+from src.modelos.personajes.protagonista.hoku import Hoku
 from src.excepciones.excepciones import DanioInvalidoError, PersonajeMuertoError, ObjetivoMuertoError, HabilidadNoDesbloqueadaError, JefeNoDerrotadoError
 """TESTS PARA LA CLASE PERSONAJE (y su subclase Hoku)"""
 

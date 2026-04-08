@@ -1,4 +1,4 @@
-from src.personajes.personaje import Personaje
+from modelos.personajes.personaje import Personaje
 from src.excepciones.excepciones import DanioInvalidoError
 
 # Instancia
