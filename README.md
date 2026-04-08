@@ -1,4 +1,4 @@
-# <p align="center"> <img src="https://fontmeme.com/permalink/240521/your-link-here.png" alt="HOKU Title" /> HOKU </p>
+# <p align="center"> HOKU </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white" />
@@ -55,7 +55,8 @@
 * **Pip** instalado.
 
 ### 📦 Configuración del entorno
-1. **Clonar el repositorio:**
+
+### 1. Clonar el repositorio:
    ```bash
    git clone [https://github.com/KORATcs/mi_proyecto.git](https://github.com/KORATcs/mi_proyecto.git)
 
@@ -75,16 +76,19 @@
 
     pip install pygame
 
-🎮 Instrucciones de Juego
+### 🎮 Instrucciones de Juego
     Instala la librería base para el motor gráfico:
 
     python3 main.py
 
-Acción,Hoku (Protagonista),Jefe (Cabra de Fuego)
-Moverse,W A S D,↑ ↓ ← →
-Atacar,Espacio,(Encuentro Cercano)
 
-Estructura del MVC
+| Acción | Hoku (Protagonista) | Jefe (Cabra de Fuego) |
+| :--- | :--- | :--- |
+| **Moverse** | `W` `A` `S` `D` | `↑` `↓` `←` `→` |
+| **Atacar** | `Espacio` | (Encuentro Cercano) |
+
+
+### Estructura del MVC
 
 mi_proyecto/
 ├── main.py                # Director de orquesta (Bucle principal)
@@ -95,14 +99,14 @@ mi_proyecto/
 │       └── personaje_grafico.py
 └── README.md              # Documentación del proyecto
 
-🛠️ Tecnologías
+### 🛠️ Tecnologías
 Lenguaje: Python 🐍
 
 Motor: Pygame 🕹️
 
 Paradigma: Programación Orientada a Objetos (POO)
 
-🌟 Créditos
+### 🌟 Créditos
 Desarrollado con mucha dedicación y café por Camila (Hoku Team).
 ¡Gracias por explorar este mundo de híbridos! nwn
 
