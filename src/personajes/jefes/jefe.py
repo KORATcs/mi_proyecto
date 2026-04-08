@@ -1,4 +1,5 @@
 from src.personajes.personaje import Personaje
+from src.excepciones.excepciones import JefeNoDerrotadoError
 """Clase Padre de todas las subclases de los Jefes. Cada nivel/realidad va a tener un jefe unico oblgiatorio
 Cada uno de ellos, va a tener un nombre, vida y ataques especiales unicos y diferentes. Lo unico basico es su 
 golpe comun que quita siempre 2 corazones"""
@@ -13,10 +14,10 @@ class Jefe(Personaje):
         self.habilidad_otorgada = habilidad_otorgada #habilidad que se le otorga a Hoku al derrotar a este jefe
     
     def otorgar_recompensa(self, personaje):
-        if not self.estaVivo() == False:
-            return None
-        else: 
-            personaje.desbloquear_habilidad(self.habilidad_otorgada)
-            return self.habilidad_otorgada
+        # VALIDACIÓN: ¿Sigue vivo el jefe?
+        if self.estaVivo():
+            raise JefeNoDerrotadoError(f"No puedes obtener la recompensa, {self.nombre} sigue vivo.")
             
+        personaje.desbloquear_habilidad(self.habilidad_otorgada)
+        return self.habilidad_otorgada
     

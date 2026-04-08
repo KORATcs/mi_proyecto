@@ -2,6 +2,7 @@ import unittest
 from src.personajes.jefes.jefe import Jefe
 from src.personajes.jefes.cabra_de_fuego import CabraDeFuego
 from src.personajes.protagonista.hoku import Hoku
+from src.excepciones.excepciones import JefeNoDerrotadoError
 """TESTS PARA LA CLASE JEFE (y todas sus subclases correspondientes)"""
 
 class TestJefe(unittest.TestCase):
@@ -12,8 +13,13 @@ class TestJefe(unittest.TestCase):
         self.cabra = CabraDeFuego()
         self.hoku = Hoku()
         
-    
-    def test_otorgar_recompensa(self):
+    def test_otorgar_recompensa_jefe_vivo(self):
+        """Verifica que no se pueda cobrar recompensa si el jefe vive"""
+        self.jefe._vida = 10 
+        with self.assertRaises(JefeNoDerrotadoError):
+            self.jefe.otorgar_recompensa(self.hoku)
+
+    def test_otorgar_recompensa_jefe_muerto(self):
         """Test para verificar que el metodo otorgar_recompensa funciona correctamente, otorgando la habilidad al personaje solo si el jefe ha sido derrotado"""
         self.jefe._vida = 0 #Simulamos que el jefe ha sido derrotado
         recompensa = self.jefe.otorgar_recompensa(self.hoku)

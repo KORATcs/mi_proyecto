@@ -1,3 +1,5 @@
+from src.excepciones.excepciones import DanioInvalidoError, PersonajeMuertoError, ObjetivoMuertoError
+
 class Personaje():
     """CLASE BASE (PADRE) que va a tener un constructor unicamente con un NOMBRE"""
 
@@ -16,29 +18,26 @@ class Personaje():
         if self._vida > 0:
             return True
         return False
-
+    
     def atacar(self, Enemigo):
-        """Metodo que primero verifica si el enemigo esta con vida o no. Si es True, se va a proceder al ataque,
-        de lo contrario solo se va a mostrar el mensaje de que "tal enemigo esta muerto"""
-        if Enemigo.estaVivo() == True:
+            # VALIDACIÓN: ¿El atacante está vivo?
+            if not self.estaVivo():
+                raise PersonajeMuertoError(f"{self.nombre} está muerto y no puede atacar.")
+            
+            # VALIDACIÓN: ¿El objetivo está vivo?
+            if not Enemigo.estaVivo():
+                raise ObjetivoMuertoError(f"{Enemigo.nombre} ya está muerto.")
+
             print(f"{self.nombre} ataca a {Enemigo.nombre}")
             return Enemigo.recibir_danio(self.ataque)
-        else:
-            if Enemigo.nombre == "Cabra de Fuego":
-                self.desbloquear_habilidad(Enemigo.habilidad_otorgada)
-                print(f"{Enemigo.nombre} esta muerto. Hoku ha desbloqueado la habilidad: {Enemigo.habilidad_otorgada}")
-            else:
-                print(f"{Enemigo.nombre} esta muerto")
 
     def recibir_danio(self, danio):
-        """Metodo que recibe el danio del ataque enemigo y lo resta a la vida del personaje. 
-        Si el danio es mayor a la vida actual, la vida se va a quedar en 0"""
-        self._vida -= danio
-
-        if self._vida < 0:
-            self._vida = 0
-
-        print(f"{self.nombre} recibe {danio} de danio")
-        print(f"Vida restante: {self._vida}")
-
-        return self._vida > 0
+            # VALIDACIÓN: ¿Daño negativo?
+            if danio < 0:
+                raise DanioInvalidoError("El daño no puede ser un valor negativo.")
+                
+            self._vida -= danio
+            if self._vida < 0: self._vida = 0
+            
+            print(f"{self.nombre} recibe {danio} de daño. Vida restante: {self._vida}")
+            return self.estaVivo()

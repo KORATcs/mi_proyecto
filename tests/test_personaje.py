@@ -1,6 +1,7 @@
 import unittest
 from src.personajes.personaje import Personaje
 from src.personajes.protagonista.hoku import Hoku
+from src.excepciones.excepciones import DanioInvalidoError, PersonajeMuertoError, ObjetivoMuertoError, HabilidadNoDesbloqueadaError, JefeNoDerrotadoError
 """TESTS PARA LA CLASE PERSONAJE (y su subclase Hoku)"""
 
 class TestPersonaje(unittest.TestCase):
@@ -48,10 +49,11 @@ class TestPersonaje(unittest.TestCase):
        self.assertEqual(self.personaje2._vida, 2)
 
     def test_atacar_enemigo_muerto(self):
-        """PROBAR que el metodo "atacar" muestre el mensaje correcto si el enemigo esta muerto"""
+        """Antes esperaba un print, ahora verifica que lance la excepción"""
         self.personaje2._vida = 0
-        self.personaje.atacar(self.personaje2)
-        self.assertEqual(self.personaje2._vida, 0)
+        # Verificamos que se lance la excepción correcta
+        with self.assertRaises(ObjetivoMuertoError):
+            self.personaje.atacar(self.personaje2)
 
     def test_atacar_danio_extremo(self):
         """PROBAR que el metodo "atacar" deje la vida del enemigo en 0 si el ataque es mayor a la vida actual del enemigo"""
@@ -68,6 +70,11 @@ class TestPersonaje(unittest.TestCase):
        """PROBAR que el metodo "recibir_danio()" deje la vida en 0 si recibe danio extremo (mas del total de su vida disponible)"""
        self.personaje.recibir_danio(10)
        self.assertEqual(self.personaje._vida, 0)
+
+    def test_recibir_danio_negativo(self):
+        """Nuevo test para validar la nueva regla de daño"""
+        with self.assertRaises(DanioInvalidoError):
+            self.personaje.recibir_danio(-10)
 
 #=================================== HOKU TESTS ===================================#
 
@@ -128,10 +135,10 @@ class TestPersonaje(unittest.TestCase):
         self.assertEqual(self.personaje2._vida, 2)
     
     def test_lanzar_habilidad_no_desbloqueada(self):
-        """PROBAR que el metodo "lanzar_habilidad()" muestre el mensaje correcto si la habilidad no esta desbloqueada"""
+        """Antes verificaba que la vida no cambiara, ahora verifica el error"""
         self.Hoku.habilidades = []
-        self.Hoku.lanzar_habilidad("Bola de Fuego", self.personaje2)
-        self.assertEqual(self.personaje2._vida, 3)
+        with self.assertRaises(HabilidadNoDesbloqueadaError):
+            self.Hoku.lanzar_habilidad("Bola de Fuego", self.personaje2)
     
     def test_lanzar_habilidad_enemigo_muerto(self):
         """PROBAR que el metodo "lanzar_habilidad()" muestre el mensaje correcto si el enemigo esta muerto"""

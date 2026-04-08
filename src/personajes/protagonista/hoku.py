@@ -1,4 +1,5 @@
 from src.personajes.personaje import Personaje
+from src.excepciones.excepciones import HabilidadNoDesbloqueadaError
 """Clase Hoku, el protagonista del juego. Es un pequenio extraterrestre, hibrido, similar a un zorro del desierto,
 que puede consumir habilidades de los jefes para avanzar por los mundos"""
 
@@ -37,10 +38,9 @@ class Hoku(Personaje):
             self.habilidades.append(habilidad)
 
     def lanzar_habilidad(self, habilidad, Enemigo):
-        """Metodo que permite a Hoku lanzar una habilidad desbloqueada contra un enemigo, verificando si la habilidad esta desbloqueada o no"""
-        if habilidad in self.habilidades:
-            print(f"Hoku lanza {habilidad} a {Enemigo.nombre}")
-            return Enemigo.recibir_danio(self.ataque)
-        else:
-            print(f"Hoku no ha desbloqueado la habilidad: {habilidad}")
-    
+        # VALIDACIÓN: ¿Tiene la habilidad?
+        if habilidad not in self.habilidades:
+            raise HabilidadNoDesbloqueadaError(f"Hoku no ha desbloqueado: {habilidad}")
+        
+        print(f"Hoku lanza {habilidad} a {Enemigo.nombre}")
+        return Enemigo.recibir_danio(self.ataque)
