@@ -1,9 +1,9 @@
 # <p align="center"> HOKU </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/Library-Pygame-green?style=for-the-badge&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/Status-In_Development-orange?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white" />
+<img src="https://img.shields.io/badge/Library-Pygame-green?style=for-the-badge&logo=python&logoColor=white" />
+<img src="https://img.shields.io/badge/Status-In_Development-orange?style=for-the-badge" />
 </p>
 
 ---
@@ -57,29 +57,29 @@
 ### 📦 Configuración del entorno
 
 ### 1. Clonar el repositorio:
-   ```bash
-   git clone [https://github.com/KORATcs/mi_proyecto.git](https://github.com/KORATcs/mi_proyecto.git)
+```bash
+git clone [https://github.com/KORATcs/mi_proyecto.git](https://github.com/KORATcs/mi_proyecto.git)
 
 ### 2. Crear un entorno virtual
-    Para evitar conflictos con otras librerias, crea un entorno aislado:
+Para evitar conflictos con otras librerias, crea un entorno aislado:
 
-    # En Linux o macOS:
-    python3 -m venv venv
-    source venv/bin/activate
+# En Linux o macOS:
+python3 -m venv venv
+source venv/bin/activate
 
-    # En Windows:
-    python -m venv venv
-    venv\Scripts\activate
+# En Windows:
+python -m venv venv
+venv\Scripts\activate
 
 ### 3. Instalar Dependencias
-    Instala la libreria pase para el motor del juego
+Instala la libreria pase para el motor del juego
 
-    pip install pygame
+pip install pygame
 
 ### 🎮 Instrucciones de Juego
-    Instala la librería base para el motor gráfico:
+Instala la librería base para el motor gráfico:
 
-    python3 main.py
+python3 main.py
 
 
 | Acción | Hoku (Protagonista) | Jefe (Cabra de Fuego) |
