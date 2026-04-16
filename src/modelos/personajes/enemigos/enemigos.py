@@ -10,6 +10,10 @@ class Enemigo(Personaje):
         self._vida = vida
         self.ataque = ataque
 
+    def morir(self):
+        """Metodo que permite a un enemigo morir, mostrando un mensaje de muerte"""
+        print(f"{self.nombre} ha sido derrotado")
+
     def detectar_objetivo(self, objetivo):
         """Metodo que permite a un enemigo detectar a Hoku y mostrar un mensaje de deteccion"""
         print(f"{self.nombre} detecta a {objetivo.nombre}")

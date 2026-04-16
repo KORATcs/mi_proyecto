@@ -1,4 +1,4 @@
-from src.excepciones.excepciones import DanioInvalidoError, PersonajeMuertoError, ObjetivoMuertoError
+from excepciones.excepciones import DanioInvalidoError, PersonajeMuertoError, ObjetivoMuertoError
 
 class Personaje():
     """CLASE BASE (PADRE) que va a tener un constructor unicamente con un NOMBRE"""

@@ -1,5 +1,5 @@
 from src.modelos.personajes.personaje import Personaje
-from src.excepciones.excepciones import HabilidadNoDesbloqueadaError
+from excepciones.excepciones import HabilidadNoDesbloqueadaError
 """Clase Hoku, el protagonista del juego. Es un pequenio extraterrestre, hibrido, similar a un zorro del desierto,
 que puede consumir habilidades de los jefes para avanzar por los mundos"""
 
@@ -7,7 +7,7 @@ class Hoku(Personaje):
     
     def __init__(self):
         super().__init__("Hoku")
-        self.vida_maxima = 4 #puede incrementar su vida maxima 
+        self.vida_maxima = 5 #puede incrementar su vida maxima 
         self._vida = self.vida_maxima #vida actual 
         self.ataque = 1 #hace 1 de danio 
         self.habilidades = [] #ataque que puede utilizarse cuando derrote el primer jefe (fuego)

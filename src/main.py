@@ -1,98 +1,163 @@
 import pygame
 import sys
 
-# 1. IMPORTACIONES
+# MODELOS
 from src.modelos.personajes.protagonista.hoku import Hoku
-from src.modelos.personajes.jefes.cabra_de_fuego import CabraDeFuego
-from src.vistas.personaje_grafico import PersonajeGrafico
+from src.modelos.personajes.enemigos.bichiluz import Bichiluz
+
+# VISTAS
+from src.vistas.personajes.hoku_grafico import HokuGrafico
+from src.vistas.personajes.bichiluz_grafico import BichiluzGrafico
+from src.vistas.ataques.ataque_grafico import ZarpazoGrafico
+from src.vistas.ui.hud import HUD
+
+# CONTROLADOR
+from src.controladores.controlador_hoku import ControladorHoku
+from src.controladores.controlador_bichiluz import ControladorBichiluz
+
 
 def main():
     pygame.init()
-    ANCHO, ALTO = 800, 600
+
+    ANCHO, ALTO = 1280, 720
     pantalla = pygame.display.set_mode((ANCHO, ALTO))
-    pygame.display.set_caption("Hoku - Prototipo de juego")
-    fuente = pygame.font.SysFont("Arial", 50, bold=True)
-    
+    pygame.display.set_caption("Hoku - Prototipo")
+
     NEGRO = (0, 0, 0)
-    ROSA = (255, 182, 193)
-    NARANJA = (255, 140, 0)
     VELOCIDAD = 5
     FPS = 75
-    
-    hoku_logico = Hoku()
-    jefe_logico = CabraDeFuego()
-    jefe_derrotado = False
 
-    hoku_vista = PersonajeGrafico(100, 100, 60, 60, ROSA)
-    jefe_vista = PersonajeGrafico(500, 300, 80, 80, NARANJA)
-
-    limite_pantalla = pygame.Rect(0, 0, ANCHO, ALTO)
     reloj = pygame.time.Clock()
+    limite_pantalla = pygame.Rect(0, 0, ANCHO, ALTO)
+
+    # MODELOS
+    hoku_logico = Hoku()
+    bichiluz_logico = Bichiluz()
+
+    # VISTAS
+    hoku_vista = HokuGrafico(100, 100, hoku_logico)
+    bichiluz_vista = BichiluzGrafico(500, 300, bichiluz_logico)
+
+    # HUD
+    hud_hoku = HUD(hoku_logico, 20, 20)
+    hud_bichiluz = HUD(bichiluz_logico, 20, 70)
+
+    # 🎮 CONTROLADOR
+    controlador = ControladorHoku()
+    controlador2 = ControladorBichiluz()
+
+    # 🧱 LISTAS ESCALABLES
+    enemigos = []
+    enemigos.append(bichiluz_vista)
+
+    ataques = []
+
     corriendo = True
 
     while corriendo:
-        # 1. GUARDAR POSICIONES
-        pos_ant_hoku = hoku_vista.rect.topleft
-        pos_ant_jefe = jefe_vista.rect.topleft
+        dt = reloj.tick(FPS)
 
-        # A. EVENTOS
-        for evento in pygame.event.get():
+        # 🎯 EVENTOS
+        eventos = pygame.event.get()
+        for evento in eventos:
             if evento.type == pygame.QUIT:
                 corriendo = False
             
-            if evento.type == pygame.KEYDOWN and not jefe_derrotado:
+            # EL ATAQUE POR ESPACIO DEBE IR AQUÍ ADENTRO
+            if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_SPACE:
-                    pos_hoku = pygame.Vector2(hoku_vista.rect.center)
-                    pos_jefe = pygame.Vector2(jefe_vista.rect.center)
-                    distancia = pos_hoku.distance_to(pos_jefe)
-                    RANGO_ATAQUE = 100 
+                    # Este ataque manual (el de colisión directa de rects) 
+                    # también debería estar aquí si quieres conservarlo
+                    if hoku_vista.rect.colliderect(bichiluz_vista.rect):
+                        hoku_logico.atacar(bichiluz_logico)
 
-                    if distancia <= RANGO_ATAQUE:
-                        hoku_logico.atacar(jefe_logico)
-                        if jefe_logico._vida <= 0:
-                            jefe_derrotado = True
+        # 🎮 INPUT
+        controlador.procesar_eventos(eventos)
+        #controlador2.procesar_eventos(eventos)
 
-        # B. MOVIMIENTO (Solo si el jefe está vivo)
-        teclas = pygame.key.get_pressed()
-        if not jefe_derrotado:
-            dx, dy = 0, 0
-            if teclas[pygame.K_w]: dy -= VELOCIDAD
-            if teclas[pygame.K_s]: dy += VELOCIDAD
-            if teclas[pygame.K_a]: dx -= VELOCIDAD
-            if teclas[pygame.K_d]: dx += VELOCIDAD
-            hoku_vista.mover(dx, dy, limite_pantalla)
+        dx, dy = controlador.obtener_movimiento()
+        esta_atacando = controlador.atacando
+        saltando = controlador.saltando
 
-            jx, jy = 0, 0
-            if teclas[pygame.K_UP]:    jy -= VELOCIDAD
-            if teclas[pygame.K_DOWN]:  jy += VELOCIDAD
-            if teclas[pygame.K_LEFT]:  jx -= VELOCIDAD
-            if teclas[pygame.K_RIGHT]: jx += VELOCIDAD
-            jefe_vista.mover(jx, jy, limite_pantalla)
+        bichi1, bichi2 = controlador2.obtener_movimiento()
+        atacar = controlador.atacando
 
-            # C. COLISIÓN
-            if hoku_vista.colisiona_con(jefe_vista):
-                hoku_vista.rect.topleft = pos_ant_hoku
-                jefe_vista.rect.topleft = pos_ant_jefe
+        # 🔄 normalizar diagonal
+        if bichi1 != 0 and bichi2 != 0:
+            bichi1 *= 0.7
+            bichi2 *= 0.7
 
-        # D. RENDERIZADO (Todo esto debe estar DENTRO del while)
+        dx *= VELOCIDAD
+        dy *= VELOCIDAD
+
+        bichi1 *= VELOCIDAD
+        bichi2 *= VELOCIDAD
+
+
+        # ⚔️ CREAR ATAQUE
+        if esta_atacando and not hoku_vista.bloqueando_accion:
+            offset = 40 if hoku_vista.mirando_derecha else -40
+
+            nuevo_ataque = ZarpazoGrafico(
+                hoku_vista.rect.x + offset,
+                hoku_vista.rect.y,
+                hoku_vista.mirando_derecha,
+                hoku_vista.animaciones
+            )
+
+            ataques.append(nuevo_ataque)
+
+        # 🧠 UPDATE PERSONAJES
+        hoku_vista.update(dx, dy, esta_atacando, saltando, dt, limite_pantalla, enemigos)
+
+        #for enemigo in enemigos:
+         #   enemigo.actualizar(dt)
+
+        """DE FORMA MOMENTANEA"""
+        for enemigo in enemigos:
+            enemigo.actualizar(bichi1, bichi2, dt, limite_pantalla)
+            
+
+        # 💥 DAÑO POR CONTACTO
+        for enemigo in enemigos:
+            if hoku_vista.rect.colliderect(enemigo.rect):
+                if hoku_vista.tiempo_danio >= hoku_vista.cooldown_danio:
+                    enemigo.modelo.atacar(hoku_logico)
+                    hoku_vista.tiempo_danio = 0
+
+        # ⚔️ UPDATE ATAQUES
+        for ataque in ataques:
+            ataque.update(dt)
+
+            for enemigo in enemigos:
+                # Verificamos colisión Y que no haya sido golpeado por ESTE ataque aún
+                if ataque.rect.colliderect(enemigo.rect) and enemigo.modelo not in ataque.golpeados:
+                    hoku_logico.atacar(enemigo.modelo)
+                    ataque.golpeados.append(enemigo.modelo) # <--- Marcamos como golpeado
+
+        # limpiar ataques
+        ataques = [a for a in ataques if a.activo]
+
+        # 🎨 RENDER
         pantalla.fill(NEGRO)
-        
-        if not jefe_derrotado:
-            hoku_vista.dibujar(pantalla)
-            jefe_vista.dibujar(pantalla)
-        else:
-            # Mensaje de victoria
-            mensaje = fuente.render("¡EL JEFE HA MUERTO!", True, (255, 255, 0))
-            rect_texto = mensaje.get_rect(center=(ANCHO // 2, ALTO // 2))
-            pantalla.blit(mensaje, rect_texto)
-            # Dibujamos a Hoku solo para que se vea en la pantalla final
-            hoku_vista.dibujar(pantalla)
+
+        for enemigo in enemigos:
+            enemigo.dibujar(pantalla)
+
+        hoku_vista.dibujar(pantalla)
+
+        for ataque in ataques:
+            ataque.dibujar(pantalla)
+
+
+        hud_hoku.dibujar(pantalla)
+        hud_bichiluz.dibujar(pantalla)
 
         pygame.display.flip()
-        reloj.tick(FPS)
 
     pygame.quit()
     sys.exit()
+
 
 if __name__ == "__main__":
     main()

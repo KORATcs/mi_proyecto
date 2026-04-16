@@ -1,5 +1,5 @@
 from modelos.personajes.personaje import Personaje
-from src.excepciones.excepciones import DanioInvalidoError
+from excepciones.excepciones import DanioInvalidoError
 
 # Instancia
 hoku = Personaje("Hoku")
