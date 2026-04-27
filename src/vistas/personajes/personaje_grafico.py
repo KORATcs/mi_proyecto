@@ -31,7 +31,6 @@ class PersonajeGrafico:
         for i in range(frames):
             frame = sprite_sheet.subsurface((i * ancho_frame, 0, ancho_frame, alto_frame))
 
-            # 🔥 ACÁ está la magia
             frame = pygame.transform.scale(frame, (w, h))
 
             lista_frames.append(frame)

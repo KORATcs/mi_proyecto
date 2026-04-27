@@ -1,7 +1,7 @@
 import unittest
 from src.modelos.personajes.personaje import Personaje
 from src.modelos.personajes.protagonista.hoku import Hoku
-from src.excepciones.excepciones import DanioInvalidoError, PersonajeMuertoError, ObjetivoMuertoError, HabilidadNoDesbloqueadaError, JefeNoDerrotadoError
+from excepciones.excepciones import DanioInvalidoError, PersonajeMuertoError, ObjetivoMuertoError, HabilidadNoDesbloqueadaError, JefeNoDerrotadoError
 """TESTS PARA LA CLASE PERSONAJE (y su subclase Hoku)"""
 
 class TestPersonaje(unittest.TestCase):
@@ -88,6 +88,12 @@ class TestPersonaje(unittest.TestCase):
         self.Hoku.curar()
         self.assertEqual(self.Hoku._vida, self.Hoku.vida_maxima)
 
+    def test_curar_ya_estando_lleno(self):
+        """Validar que curar no sobrepase la vida maxima"""
+        self.Hoku._vida = self.Hoku.vida_maxima
+        self.Hoku.curar()
+        self.assertEqual(self.Hoku._vida, self.Hoku.vida_maxima)
+
     def test_dash(self):
         """PROBAR que el metodo "dash()" muestre el mensaje correcto"""
         self.Hoku.dash()
@@ -153,3 +159,4 @@ class TestPersonaje(unittest.TestCase):
         self.Hoku.ataque = 5
         self.Hoku.lanzar_habilidad("Bola de Fuego", self.personaje2)
         self.assertEqual(self.personaje2._vida, 0)
+

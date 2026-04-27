@@ -115,7 +115,7 @@ def main():
 
         """DE FORMA MOMENTANEA"""
         for enemigo in enemigos:
-            enemigo.actualizar(bichi1, bichi2, dt, limite_pantalla)
+            enemigo.update(bichi1, bichi2, dt, limite_pantalla)
             
 
         # 💥 DAÑO POR CONTACTO

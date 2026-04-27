@@ -13,13 +13,13 @@ class Perruga(Enemigo):
         self.limite_der = 10
 
     def moverse(self):
-        """Metodo que permite a Perruga moverse de manera automática por el escenario, patrullando de un lado a otro"""
-        self.posicion += self.direccion
+        if self.estaVivo(): # <--- AGREGAR ESTO
+            self.posicion += self.direccion
 
-        if self.posicion >= self.limite_der or self.posicion <= self.limite_izq:
-            self.direccion *= -1  # cambia de dirección
+            if self.posicion >= self.limite_der or self.posicion <= self.limite_izq:
+                self.direccion *= -1 
 
-        print(f"{self.nombre} patrulla en posición {self.posicion}")
+            print(f"{self.nombre} patrulla en posición {self.posicion}")
 
     def ataque_especial(self, objetivo):
         """Metodo que permite a Perruga realizar un ataque especial desde abajo de la tierra,

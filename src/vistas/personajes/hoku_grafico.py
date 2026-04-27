@@ -11,13 +11,13 @@ class HokuGrafico(PersonajeGrafico):
         self.cargar_animacion("jump", "src/assets/images/personajes/hoku/hoku-jump.png", 8, 200, 200)
         self.cargar_animacion("death", "src/assets/images/personajes/hoku/hoku-death.png", 10, 200, 200)
 
-        # 🎨 imagen base
+        # imagen base
         self.image = self.animaciones["idle"][0]
 
-        # 📦 HITBOX (cuerpo real)
+        # HITBOX (cuerpo real)
         self.rect = pygame.Rect(x, y, 80, 100)
 
-        # ⚙️ OFFSETS del sprite respecto a la hitbox (LA CLAVE)
+        # OFFSETS del sprite respecto a la hitbox (LA CLAVE)
         self.offset_y = 20  # mueve arriba/abajo
 
         self.bloqueando_accion = False
@@ -91,16 +91,16 @@ class HokuGrafico(PersonajeGrafico):
 
     def dibujar(self, pantalla):
 
-        # 🔄 flip
+        # flip
         if self.mirando_derecha:
             imagen_final = self.image
         else:
             imagen_final = pygame.transform.flip(self.image, True, False)
 
-        # 🎯 anclar SIEMPRE al mismo punto de la hitbox
+        # anclar SIEMPRE al mismo punto de la hitbox
         rect_imagen = imagen_final.get_rect(midbottom=self.rect.midbottom)
 
-        # 🎯 aplicar offset SOLO vertical (para subir/bajar el cuerpo)
+        # aplicar offset SOLO vertical (para subir/bajar el cuerpo)
         rect_imagen.y += self.offset_y
 
         pantalla.blit(imagen_final, rect_imagen)

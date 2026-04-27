@@ -20,7 +20,7 @@ class BichiluzGrafico(PersonajeGrafico):
         # 🎯 centramos hitbox respecto al sprite
         self.rect.center = rect_imagen.center
 
-    def actualizar(self, dx, dy, dt, limite_pantalla):
+    def update(self, dx, dy, dt, limite_pantalla):
         
         # movimiento
         self.rect.x += dx

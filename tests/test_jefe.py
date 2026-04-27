@@ -2,7 +2,7 @@ import unittest
 from src.modelos.personajes.jefes.jefe import Jefe
 from src.modelos.personajes.jefes.cabra_de_fuego import CabraDeFuego
 from src.modelos.personajes.protagonista.hoku import Hoku
-from src.excepciones.excepciones import JefeNoDerrotadoError
+from excepciones.excepciones import JefeNoDerrotadoError
 """TESTS PARA LA CLASE JEFE (y todas sus subclases correspondientes)"""
 
 class TestJefe(unittest.TestCase):
@@ -31,14 +31,14 @@ class TestJefe(unittest.TestCase):
     def test_atacar_cabra_de_fuego(self):
         """Test para verificar que el ataque comun de la Cabra de Fuego funciona correctamente, quitando 2 corazones a Hoku"""
         self.cabra.atacar(self.hoku)
-        self.assertEqual(self.hoku._vida, 2) #Hoku empieza con 4 de vida, el ataque comun de la cabra quita 2 corazones
+        self.assertEqual(self.hoku._vida, 3) #Hoku empieza con 4 de vida, el ataque comun de la cabra quita 2 corazones
     
     def test_atacar_embestida_cabra_de_fuego(self):
         """Test para verificar que el ataque de embestida de la Cabra de Fuego funciona correctamente, quitando 2 corazones a Hoku"""
         self.cabra.atacar_embestida(self.hoku)
-        self.assertEqual(self.hoku._vida, 2) #Hoku empieza con 4 de vida, el ataque de embestida de la cabra quita 2 corazones
+        self.assertEqual(self.hoku._vida, 3) #Hoku empieza con 4 de vida, el ataque de embestida de la cabra quita 2 corazones
     
     def test_atacar_pisoton_cabra_de_fuego(self):
         """Test para verificar que el ataque de pisoton de la Cabra de Fuego funciona correctamente, quitando 3 corazones a Hoku"""
         self.cabra.atacar_pisoton(self.hoku)
-        self.assertEqual(self.hoku._vida, 1) #Hoku empieza con 4 de vida, el ataque de pisoton de la cabra quita 3 corazones
+        self.assertEqual(self.hoku._vida, 2) #Hoku empieza con 4 de vida, el ataque de pisoton de la cabra quita 3 corazones

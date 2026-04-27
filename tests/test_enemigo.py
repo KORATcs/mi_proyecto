@@ -34,6 +34,20 @@ class TestEnemigo(unittest.TestCase):
         self.enemigo.moverse()
         self.assertTrue(True) #NO HAY UN RESULTADO ESPECIFICO PARA ESTE METODO, SOLO SE VERIFICA QUE SE EJECUTE SIN ERRORES
 
+    def test_enemigo_muerto_no_se_mueve(self):
+        """Un enemigo muerto no debería patrullar ni moverse"""
+        self.enemigo6._vida = 0
+        pos_inicial = self.enemigo6.posicion
+        self.enemigo6.moverse()
+        self.assertEqual(self.enemigo6.posicion, pos_inicial)
+
+    def test_metodo_morir(self):
+        """Verificar que el método morir se ejecute (al menos no de error)"""
+        try:
+            self.enemigo.morir()
+        except Exception as e:
+            self.fail(f"morir() lanzó una excepción inesperada: {e}")
+
     def test_comportarse_bichiluz(self):
         """TEST PARA EL METODO COMPORTARSE DE BICHILUZ"""
         objetivo = self.enemigo2

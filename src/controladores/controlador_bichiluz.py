@@ -1,4 +1,5 @@
 import pygame
+
 """CLASE MOMENTANEA PARA QUE BICHILUZ PUEDA MOVERSE Y ATACAR"""
 class ControladorBichiluz:
     def __init__(self):
