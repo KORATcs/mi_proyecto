@@ -10,9 +10,7 @@ class EscenarioUno(Escenario):
         super().__init__(1280, 720)
 
         # Fondo del escenario
-        self.fondo = pygame.image.load(
-            "src/assets/images/escenarios/primer_escenario.png"
-        ).convert()
+        self.fondo = pygame.image.load("src/assets/images/escenarios/primer_escenario.png").convert()
 
         # Conexiones
         self.salida_derecha = None
