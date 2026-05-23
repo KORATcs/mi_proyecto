@@ -18,15 +18,11 @@ from src.vistas.ataques.ataque_grafico import ZarpazoGrafico
 from src.vistas.ui.hud import HUD
 
 # =========================
-# ESCENARIOS
-# =========================
-from src.vistas.escenarios.escenario_uno import EscenarioUno
-
-# =========================
 # CONTROLADORES
 # =========================
 from src.controladores.controlador_hoku import ControladorHoku
 from src.controladores.controlador_bichiluz import ControladorBichiluz
+from src.controladores.gestor_escenarios import GestorEscenarios
 
 
 class GameController:
@@ -77,9 +73,10 @@ class GameController:
         )
 
         # =========================
-        # ESCENARIO ACTUAL
+        # GESTOR DE ESCENARIOS     ← reemplaza self.escenario_actual = EscenarioUno()
         # =========================
-        self.escenario_actual = EscenarioUno()
+        self.gestor_escenarios = GestorEscenarios()
+        self.gestor_escenarios.cargar_escenario(1)
 
         # =========================
         # MODELOS
@@ -92,7 +89,7 @@ class GameController:
         # VISTAS PERSONAJES
         # =========================
         self.hoku_vista = HokuGrafico(
-            100,
+            600,
             100,
             self.hoku_logico
         )
@@ -165,11 +162,9 @@ class GameController:
 
         for evento in self.eventos_actuales:
 
-            # CERRAR JUEGO
             if evento.type == pygame.QUIT:
                 self.ejecutando = False
 
-            # ATAQUE MANUAL
             if evento.type == pygame.KEYDOWN:
 
                 if evento.key == pygame.K_SPACE:
@@ -182,14 +177,9 @@ class GameController:
                             self.bichiluz_logico
                         )
 
-        # INPUT PERSONAJES
         self.controlador_hoku.procesar_eventos(
             self.eventos_actuales
         )
-
-        #self.controlador_bichiluz.procesar_eventos(
-        #    self.eventos_actuales
-        #)
 
     # ==================================================
     # UPDATE
@@ -197,22 +187,18 @@ class GameController:
     def actualizar(self):
 
         # =========================
-        # ESCENARIO
+        # ESCENARIO                ← usa el gestor
         # =========================
-        self.escenario_actual.actualizar()
+        self.gestor_escenarios.escenario_actual.actualizar()
 
         # =========================
         # MOVIMIENTO HOKU
         # =========================
         dx, dy = self.controlador_hoku.obtener_movimiento()
 
-        esta_atacando = (
-            self.controlador_hoku.atacando
-        )
+        esta_atacando = self.controlador_hoku.atacando
 
-        saltando = (
-            self.controlador_hoku.saltando
-        )
+        saltando = self.controlador_hoku.saltando
 
         # =========================
         # MOVIMIENTO BICHILUZ
@@ -221,13 +207,10 @@ class GameController:
             self.controlador_bichiluz.obtener_movimiento()
         )
 
-        # NORMALIZAR DIAGONAL
         if bichi1 != 0 and bichi2 != 0:
-
             bichi1 *= 0.7
             bichi2 *= 0.7
 
-        # VELOCIDAD
         VELOCIDAD = 5
 
         dx *= VELOCIDAD
@@ -257,12 +240,10 @@ class GameController:
                 self.hoku_vista.animaciones
             )
 
-            self.ataques.append(
-                nuevo_ataque
-            )
+            self.ataques.append(nuevo_ataque)
 
         # =========================
-        # UPDATE HOKU
+        # UPDATE HOKU              ← pasa el escenario actual
         # =========================
         self.hoku_vista.update(
             dx,
@@ -271,7 +252,8 @@ class GameController:
             saltando,
             self.dt,
             self.limite_pantalla,
-            self.enemigos
+            self.enemigos,
+            escenario=self.gestor_escenarios.escenario_actual
         )
 
         # =========================
@@ -291,18 +273,14 @@ class GameController:
         # =========================
         for enemigo in self.enemigos:
 
-            if self.hoku_vista.rect.colliderect(
-                enemigo.rect
-            ):
+            if self.hoku_vista.rect.colliderect(enemigo.rect):
 
                 if (
                     self.hoku_vista.tiempo_danio
                     >= self.hoku_vista.cooldown_danio
                 ):
 
-                    enemigo.modelo.atacar(
-                        self.hoku_logico
-                    )
+                    enemigo.modelo.atacar(self.hoku_logico)
 
                     self.hoku_vista.tiempo_danio = 0
 
@@ -316,31 +294,20 @@ class GameController:
             for enemigo in self.enemigos:
 
                 if (
-                    ataque.rect.colliderect(
-                        enemigo.rect
-                    )
-
-                    and enemigo.modelo
-                    not in ataque.golpeados
+                    ataque.rect.colliderect(enemigo.rect)
+                    and enemigo.modelo not in ataque.golpeados
                 ):
 
-                    self.hoku_logico.atacar(
-                        enemigo.modelo
-                    )
+                    self.hoku_logico.atacar(enemigo.modelo)
 
-                    ataque.golpeados.append(
-                        enemigo.modelo
-                    )
+                    ataque.golpeados.append(enemigo.modelo)
 
         # =========================
         # LIMPIAR ATAQUES
         # =========================
         self.ataques = [
-
             ataque
-
             for ataque in self.ataques
-
             if ataque.activo
         ]
 
@@ -354,70 +321,35 @@ class GameController:
     # ==================================================
     def dibujar(self):
 
-        # LIMPIAR PANTALLA
         self.pantalla.fill(self.NEGRO)
 
         # =========================
-        # ESCENARIO
+        # ESCENARIO                ← usa el gestor
         # =========================
-        self.escenario_actual.dibujar(
+        self.gestor_escenarios.escenario_actual.dibujar(
             self.pantalla
         )
 
-        # =========================
-        # ENEMIGOS
-        # =========================
         for enemigo in self.enemigos:
+            enemigo.dibujar(self.pantalla)
 
-            enemigo.dibujar(
-                self.pantalla
-            )
+        self.hoku_vista.dibujar(self.pantalla)
 
-        # =========================
-        # JUGADOR
-        # =========================
-        self.hoku_vista.dibujar(
-            self.pantalla
-        )
-
-        # =========================
-        # ATAQUES
-        # =========================
         for ataque in self.ataques:
+            ataque.dibujar(self.pantalla)
 
-            ataque.dibujar(
-                self.pantalla
-            )
+        self.hud_hoku.dibujar(self.pantalla)
 
-        # =========================
-        # HUD
-        # =========================
-        self.hud_hoku.dibujar(
-            self.pantalla
-        )
-
-        self.hud_bichiluz.dibujar(
-            self.pantalla
-        )
+        self.hud_bichiluz.dibujar(self.pantalla)
 
     # ==================================================
     # TRANSICIONES ENTRE ESCENARIOS
     # ==================================================
     def controlar_transiciones(self):
 
-        # EJEMPLO FUTURO:
-        #
-        # if self.hoku_vista.rect.right >= self.ANCHO:
-        #
-        #     if self.escenario_actual.salida_derecha:
-        #
-        #         self.escenario_actual = (
-        #             self.escenario_actual.salida_derecha
-        #         )
-        #
-        #         self.hoku_vista.rect.left = 0
-
-        pass
+        self.gestor_escenarios.verificar_transicion(   # ← usa el gestor
+            self.hoku_vista
+        )
 
 
 # ======================================================

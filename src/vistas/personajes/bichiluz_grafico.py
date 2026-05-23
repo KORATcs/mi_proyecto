@@ -21,7 +21,6 @@ class BichiluzGrafico(PersonajeGrafico):
         self.rect.center = rect_imagen.center
 
     def update(self, dx, dy, dt, limite_pantalla):
-        
         # movimiento
         self.rect.x += dx
         self.rect.y += dy
@@ -43,6 +42,7 @@ class BichiluzGrafico(PersonajeGrafico):
             self.cambiar_estado("death")
 
         self.update_animacion(dt)
+        
 
     def dibujar(self, pantalla):
         # SIEMPRE centrar sprite respecto a hitbox

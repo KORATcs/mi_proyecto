@@ -1,6 +1,6 @@
 import pygame
 
-from src.vistas.escenarios.escenario_uno import EscenarioUno
+from vistas.escenarios.escenario_1 import EscenarioUno
 
 
 class GameController:

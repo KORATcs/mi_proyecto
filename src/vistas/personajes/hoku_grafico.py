@@ -1,39 +1,46 @@
-from src.vistas.personajes.personaje_grafico import PersonajeGrafico
 import pygame
+from src.vistas.personajes.personaje_grafico import PersonajeGrafico
+
 
 class HokuGrafico(PersonajeGrafico):
+
     def __init__(self, x, y, modelo_hoku):
         super().__init__(x, y, modelo_hoku)
 
-        self.cargar_animacion("idle", "src/assets/images/personajes/hoku/hoku-estatico.png", 1, 200, 200)
-        self.cargar_animacion("walk", "src/assets/images/personajes/hoku/hoku-walk.png", 3, 200, 200)
-        self.cargar_animacion("attack", "src/assets/images/personajes/hoku/hoku-garras.png", 15, 200, 200)
-        self.cargar_animacion("jump", "src/assets/images/personajes/hoku/hoku-jump.png", 8, 200, 200)
-        self.cargar_animacion("death", "src/assets/images/personajes/hoku/hoku-death.png", 10, 200, 200)
+        self.cargar_animacion("idle",   "src/assets/images/personajes/hoku/hoku-estatico.png", 1,  200, 200)
+        self.cargar_animacion("walk",   "src/assets/images/personajes/hoku/hoku-walk.png",     3,  200, 200)
+        self.cargar_animacion("attack", "src/assets/images/personajes/hoku/hoku-garras.png",   15, 200, 200)
+        self.cargar_animacion("jump",   "src/assets/images/personajes/hoku/hoku-jump.png",     8,  200, 200)
+        self.cargar_animacion("death",  "src/assets/images/personajes/hoku/hoku-death.png",    10, 200, 200)
 
-        # imagen base
         self.image = self.animaciones["idle"][0]
 
-        # HITBOX (cuerpo real)
+        # HITBOX
         self.rect = pygame.Rect(x, y, 80, 100)
-
-        # OFFSETS del sprite respecto a la hitbox (LA CLAVE)
-        self.offset_y = 20  # mueve arriba/abajo
+    
+        self.offset_y = 20
 
         self.bloqueando_accion = False
 
-        # físicas
-        self.vel_y = 0
-        self.gravedad = 0.8
-        self.fuerza_salto = -20
-        self.en_suelo = True
-        
-        self.tiempo_danio = 0
+        # Físicas
+        self.vel_y          = 0
+        self.gravedad       = 0.8
+        self.fuerza_salto   = -20
+        self.en_suelo       = True
+
+        self.tiempo_danio   = 0
         self.cooldown_danio = 500
 
         self.mirando_derecha = True
 
-    def update(self, dx, dy, esta_atacando, saltando, dt, limite_pantalla, enemigos):
+        # Cambiar a False cuando quieras volver a la física normal
+        self.modo_flotante = False
+
+    # ==================================================
+    # UPDATE
+    # ==================================================
+    def update(self, dx, dy, esta_atacando, saltando, dt,
+               limite_pantalla, enemigos, escenario=None):
 
         if dx > 0:
             self.mirando_derecha = True
@@ -42,41 +49,94 @@ class HokuGrafico(PersonajeGrafico):
 
         self.tiempo_danio += dt
 
-        # movimiento
-        self.rect.x += dx
+        tiene_salida_derecha   = escenario and escenario.salida_derecha   is not None
+        tiene_salida_izquierda = escenario and escenario.salida_izquierda is not None
+        tiene_salida_superior  = escenario and escenario.salida_superior  is not None
+        tiene_salida_inferior  = escenario and escenario.salida_inferior  is not None
 
-        for enemigo in enemigos:
-            if self.rect.colliderect(enemigo.rect):
-                if dx > 0:
-                    self.rect.right = enemigo.rect.left
-                elif dx < 0:
-                    self.rect.left = enemigo.rect.right
+        plataformas = escenario.plataformas if escenario else []
 
-        # salto
-        if saltando and self.en_suelo:
-            self.vel_y = self.fuerza_salto
-            self.en_suelo = False
+        if self.modo_flotante:
+            # ── MODO FLOTANTE ──────────────────────────────
+            self.rect.x += dx
+            self.rect.y += dy
 
-        # gravedad
-        self.vel_y += self.gravedad
-        self.rect.y += self.vel_y
+        else:
+            # ── MODO NORMAL ────────────────────────────────
 
-        for enemigo in enemigos:
-            if self.rect.colliderect(enemigo.rect):
-                if self.vel_y > 0:
-                    self.rect.bottom = enemigo.rect.top
-                    self.vel_y = 0
-                    self.en_suelo = True
-                elif self.vel_y < 0:
-                    self.rect.top = enemigo.rect.bottom
-                    self.vel_y = 0
+            # Movimiento horizontal
+            self.rect.x += dx
 
-        if self.rect.bottom >= limite_pantalla.bottom:
-            self.rect.bottom = limite_pantalla.bottom
-            self.vel_y = 0
-            self.en_suelo = True
+            # Colisión horizontal con enemigos
+            for enemigo in enemigos:
+                if self.rect.colliderect(enemigo.rect):
+                    if dx > 0:
+                        self.rect.right = enemigo.rect.left
+                    elif dx < 0:
+                        self.rect.left  = enemigo.rect.right
 
-        # animaciones
+            # Colisión horizontal con plataformas
+            for plataforma in plataformas:
+                if plataforma.modelo.solida and self.rect.colliderect(plataforma.rect):
+                    if dx > 0:
+                        self.rect.right = plataforma.rect.left
+                    elif dx < 0:
+                        self.rect.left  = plataforma.rect.right
+
+            # Salto
+            if saltando and self.en_suelo:
+                self.vel_y    = self.fuerza_salto
+                self.en_suelo = False
+
+            # Gravedad
+            self.vel_y  += self.gravedad
+            self.rect.y += self.vel_y
+
+            # Colisión vertical con enemigos
+            for enemigo in enemigos:
+                if self.rect.colliderect(enemigo.rect):
+                    if self.vel_y > 0:
+                        self.rect.bottom = enemigo.rect.top
+                        self.vel_y       = 0
+                        self.en_suelo    = True
+                    elif self.vel_y < 0:
+                        self.rect.top  = enemigo.rect.bottom
+                        self.vel_y     = 0
+
+            # Colisión vertical con plataformas
+            for plataforma in plataformas:
+                if plataforma.modelo.solida and self.rect.colliderect(plataforma.rect):
+                    if self.vel_y > 0:
+                        self.rect.bottom = plataforma.rect.top
+                        self.vel_y       = 0
+                        self.en_suelo    = True
+                    elif self.vel_y < 0:
+                        self.rect.top  = plataforma.rect.bottom
+                        self.vel_y     = 0
+
+            # Límite inferior
+            if not tiene_salida_inferior:
+                if self.rect.bottom >= limite_pantalla.bottom:
+                    self.rect.bottom = limite_pantalla.bottom
+                    self.vel_y       = 0
+                    self.en_suelo    = True
+
+            # Límite superior
+            if not tiene_salida_superior:
+                if self.rect.top < limite_pantalla.top:
+                    self.rect.top = limite_pantalla.top
+                    self.vel_y    = 0
+
+        # Límites horizontales (ambos modos)
+        if not tiene_salida_derecha:
+            if self.rect.right > limite_pantalla.right:
+                self.rect.right = limite_pantalla.right
+
+        if not tiene_salida_izquierda:
+            if self.rect.left < limite_pantalla.left:
+                self.rect.left = limite_pantalla.left
+
+        # Animaciones
         if not self.modelo.estaVivo():
             self.cambiar_estado("death")
         else:
@@ -89,21 +149,21 @@ class HokuGrafico(PersonajeGrafico):
 
         self.update_animacion(dt)
 
+    # ==================================================
+    # DIBUJAR
+    # ==================================================
     def dibujar(self, pantalla):
 
-        # flip
         if self.mirando_derecha:
             imagen_final = self.image
         else:
             imagen_final = pygame.transform.flip(self.image, True, False)
 
-        # anclar SIEMPRE al mismo punto de la hitbox
         rect_imagen = imagen_final.get_rect(midbottom=self.rect.midbottom)
-
-        # aplicar offset SOLO vertical (para subir/bajar el cuerpo)
         rect_imagen.y += self.offset_y
 
         pantalla.blit(imagen_final, rect_imagen)
+        # print(self.rect.y, self.rect.bottom)
 
-        # DEBUG || LO UTILIZO SOLO PARA VER EL HITBOX Y MEJORARLA SEGUN LO REQUIERE
-       # pygame.draw.rect(pantalla, (0, 255, 0), self.rect, 2)
+        # DEBUG hitbox
+        # pygame.draw.rect(pantalla, (0, 255, 0), self.rect, 2)
