@@ -13,7 +13,7 @@ class GameController:
         # Configuración de pantalla
         self.ANCHO = 1280
         self.ALTO = 720
-        self.FPS = 75
+        self.FPS = 140
 
         # Crear ventana
         self.pantalla = pygame.display.set_mode(

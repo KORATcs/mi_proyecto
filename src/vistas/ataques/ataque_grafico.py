@@ -14,7 +14,7 @@ class ZarpazoGrafico:
         self.rect = self.image.get_rect()
 
         # 📍 Posición relativa a Hoku
-        offset_x = 20 if mirando_derecha else -80
+        offset_x = 10 if mirando_derecha else -110
         self.rect.topleft = (x + offset_x, y)
 
         self.mirando_derecha = mirando_derecha

@@ -2,6 +2,8 @@ import pygame
 from src.vistas.escenarios.escenario import Escenario
 from src.vistas.escenarios.mapa_escenario import MAPA_ESCENARIO_1
 from src.vistas.plataformas.plataforma_grafica import PlataformaGrafica
+from src.modelos.personajes.enemigos.bichiluz import Bichiluz
+from src.vistas.personajes.bichiluz_grafico import BichiluzGrafico
 
 # ==============================================================
 # ESCENARIO 1 — derecha -> 2
@@ -46,4 +48,12 @@ class EscenarioUno(Escenario):
 
                     self.plataformas.append(plataforma)
 
-    def crear_enemigos(self): pass
+    def crear_enemigos(self): 
+
+        bichiluz = BichiluzGrafico(
+            1000,
+            300,
+            Bichiluz()
+        )
+
+        self.enemigos.append(bichiluz)

@@ -29,7 +29,7 @@ class HokuGrafico(PersonajeGrafico):
         self.en_suelo       = True
 
         self.tiempo_danio   = 0
-        self.cooldown_danio = 500
+        self.cooldown_danio = 9999999
 
         self.mirando_derecha = True
 
@@ -77,11 +77,34 @@ class HokuGrafico(PersonajeGrafico):
 
             # Colisión horizontal con plataformas
             for plataforma in plataformas:
-                if plataforma.modelo.solida and self.rect.colliderect(plataforma.rect):
+
+                # usar hitbox si existe
+                colision_rect = (
+                    plataforma.hitbox
+                    if hasattr(plataforma, "hitbox")
+                    else plataforma.rect
+                )
+
+                if (
+                    plataforma.modelo.solida
+                    and self.rect.colliderect(colision_rect)
+                ):
+
+                    # evitar empuje raro al subir
+                    diferencia_y = abs(
+                        self.rect.bottom - colision_rect.top
+                    )
+
+                    if diferencia_y < 25:
+                        continue
+
                     if dx > 0:
-                        self.rect.right = plataforma.rect.left
+
+                        self.rect.right = colision_rect.left
+
                     elif dx < 0:
-                        self.rect.left  = plataforma.rect.right
+
+                        self.rect.left = colision_rect.right
 
             # Salto
             if saltando and self.en_suelo:
@@ -105,14 +128,33 @@ class HokuGrafico(PersonajeGrafico):
 
             # Colisión vertical con plataformas
             for plataforma in plataformas:
-                if plataforma.modelo.solida and self.rect.colliderect(plataforma.rect):
+
+                colision_rect = (
+                    plataforma.hitbox
+                    if hasattr(plataforma, "hitbox")
+                    else plataforma.rect
+                )
+
+                if (
+                    plataforma.modelo.solida
+                    and self.rect.colliderect(colision_rect)
+                ):
+
+                    # cayendo
                     if self.vel_y > 0:
-                        self.rect.bottom = plataforma.rect.top
-                        self.vel_y       = 0
-                        self.en_suelo    = True
+
+                        self.rect.bottom = colision_rect.top
+
+                        self.vel_y = 0
+
+                        self.en_suelo = True
+
+                    # golpeando abajo
                     elif self.vel_y < 0:
-                        self.rect.top  = plataforma.rect.bottom
-                        self.vel_y     = 0
+
+                        self.rect.top = colision_rect.bottom
+
+                        self.vel_y = 0
 
             # Límite inferior
             if not tiene_salida_inferior:

@@ -43,6 +43,10 @@ class Escenario:
 
         for enemigo in self.enemigos:
             enemigo.actualizar()
+        
+        for plataforma in self.plataformas:
+            if hasattr(plataforma, "update"):
+                plataforma.update()
 
     # =========================
     # DIBUJAR
@@ -84,3 +88,5 @@ class Escenario:
             return ("inferior", self.salida_inferior)
 
         return (None, None)
+
+    

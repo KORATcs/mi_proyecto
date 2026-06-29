@@ -1,19 +1,31 @@
 import pygame
+
 from src.vistas.escenarios.escenario import Escenario
-from src.vistas.escenarios.mapa_escenario import MAPA_ESCENARIO_5
-from src.vistas.plataformas.plataforma_grafica import PlataformaGrafica
 
 
+from src.vistas.escenarios.mapa_escenario import (
+    MAPA_ESCENARIO_5,
+    TAM_BLOQUE
+)
 
-# ==============================================================
-# ESCENARIO 5 — abajo -> 4 | izquierda -> 6 | derecha -> 7 | arriba -> 11
-# ==============================================================
+from src.vistas.plataformas.plataforma_grafica import (
+    PlataformaGrafica
+)
+
+from src.vistas.plataformas.plataforma_movil import (
+    PlataformaMovil
+)
+
+
 class EscenarioCinco(Escenario):
 
     def __init__(self):
+
         super().__init__(1280, 720)
 
-        self.cargar_fondo("src/assets/images/escenarios/escenario-5.png")
+        self.cargar_fondo(
+            "src/assets/images/escenarios/escenario-5.png"
+        )
 
         self.salida_derecha   = 7
         self.salida_izquierda = 6
@@ -21,11 +33,10 @@ class EscenarioCinco(Escenario):
         self.salida_inferior  = 4
 
         self.crear_plataformas()
+
         self.crear_enemigos()
 
     def crear_plataformas(self):
-
-        TAM_BLOQUE = 20
 
         for fila, linea in enumerate(MAPA_ESCENARIO_5):
 
@@ -43,5 +54,27 @@ class EscenarioCinco(Escenario):
                         alto=TAM_BLOQUE
                     )
 
-                    self.plataformas.append(plataforma)
+                    self.plataformas.append(
+                        plataforma
+                    )
+
+        plataforma_flotante = PlataformaMovil(
+            x=900,
+            y=200,
+            ancho=200,
+            alto=200
+        )
+
+        self.plataformas.append(
+            plataforma_flotante
+        )
+
+    def actualizar(self):
+
+        for plataforma in self.plataformas:
+
+            if hasattr(plataforma, "update"):
+
+                plataforma.update()
+
     def crear_enemigos(self): pass
