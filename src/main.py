@@ -157,7 +157,7 @@ class GameController:
             self.gestor_escenarios.escenario_actual
         )
 
-        escenario_actual.actualizar(self.hoku_vista)
+        escenario_actual.actualizar()
 
         # =========================
         # ENEMIGOS DEL ESCENARIO
