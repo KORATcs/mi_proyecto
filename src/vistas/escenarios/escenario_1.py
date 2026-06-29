@@ -3,7 +3,7 @@ from src.vistas.escenarios.escenario import Escenario
 from src.vistas.escenarios.mapa_escenario import MAPA_ESCENARIO_1
 from src.vistas.plataformas.plataforma_grafica import PlataformaGrafica
 from src.modelos.personajes.enemigos.bichiluz import Bichiluz
-from src.vistas.personajes.bichiluz_grafico import BichiluzGrafico
+from src.vistas.personajes.enemigos.bichiluz_grafico import BichiluzGrafico
 
 # ==============================================================
 # ESCENARIO 1 — derecha -> 2

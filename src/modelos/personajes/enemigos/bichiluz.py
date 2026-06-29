@@ -6,7 +6,7 @@ class Bichiluz(Enemigo):
     
     def __init__(self):
         super().__init__("Bichiluz", 3, 1)
-
+    
     def comportarse(self, objetivo):
         """Metodo que permite a Bichiluz comportarse de manera pasiva hacia Hoku, 
         flotando tranquilamente por el escenario sin atacarlo ni detectarlo"""

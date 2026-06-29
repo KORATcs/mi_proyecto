@@ -1,9 +1,11 @@
 import pygame
 from src.vistas.escenarios.escenario import Escenario
 from src.vistas.escenarios.mapa_escenario import MAPA_ESCENARIO_4
-
 from src.vistas.plataformas.plataforma_grafica import PlataformaGrafica
 
+# Importaciones del modelo y vista de Medania
+from src.modelos.personajes.enemigos.medania import Medania
+from src.vistas.personajes.enemigos.medania_grafica import MedaniaGrafica
 
 # ==============================================================
 # ESCENARIO 4 — abajo -> 3 | arriba -> 5
@@ -24,15 +26,10 @@ class EscenarioCuatro(Escenario):
         self.crear_enemigos()
 
     def crear_plataformas(self):
-
         TAM_BLOQUE = 20
-
         for fila, linea in enumerate(MAPA_ESCENARIO_4):
-
             for columna, caracter in enumerate(linea):
-
                 if caracter == "X":
-
                     x = columna * TAM_BLOQUE
                     y = fila * TAM_BLOQUE
 
@@ -42,7 +39,13 @@ class EscenarioCuatro(Escenario):
                         ancho=TAM_BLOQUE,
                         alto=TAM_BLOQUE
                     )
-
                     self.plataformas.append(plataforma)
-    def crear_enemigos(self): pass
 
+    def crear_enemigos(self):
+        # Generar al estático Medania (Ajusta la posición en su cueva)
+        medania = MedaniaGrafica(
+            400,
+            200,
+            Medania()
+        )
+        self.enemigos.append(medania)

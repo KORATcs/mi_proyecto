@@ -9,7 +9,7 @@ from src.modelos.personajes.protagonista.hoku import Hoku
 # =========================
 # VISTAS
 # =========================
-from src.vistas.personajes.hoku_grafico import HokuGrafico
+from src.vistas.personajes.hoku.hoku_grafico import HokuGrafico
 from src.vistas.ataques.ataque_grafico import ZarpazoGrafico
 from src.vistas.ui.hud import HUD
 
@@ -251,25 +251,29 @@ class GameController:
         # =========================
         # DAÑO POR CONTACTO
         # =========================
-        for enemigo in enemigos:
+        # 🔧 CAMBIO: ahora chequeamos primero si Hoku está invulnerable
+        # (gracias al flag que agregamos en HokuGrafico). Si lo está, ni
+        # siquiera entramos a aplicar daño, sin importar cuántos enemigos
+        # lo estén tocando ese frame.
+        if not self.hoku_vista.invulnerable:
 
-            if self.hoku_vista.rect.colliderect(
-                enemigo.rect
-            ):
-                print("TOCANDO ENEMIGO")
-                if (
-                    self.hoku_vista.tiempo_danio
-                    >= self.hoku_vista.cooldown_danio
-                ):
+            for enemigo in enemigos:
+
+                if self.hoku_vista.rect.colliderect(enemigo.rect):
 
                     # enemigo daña a Hoku
                     enemigo.modelo.atacar(
                         self.hoku_logico
                     )
 
+                    # Reseteamos el contador para reiniciar el cooldown
                     self.hoku_vista.tiempo_danio = 0
+                    self.hoku_vista.invulnerable = True
 
-                
+                    # 🔧 CAMBIO: break para que un solo enemigo aplique daño
+                    # por "tick" de cooldown, en vez de sumar daño de todos
+                    # los enemigos que lo estén tocando en el mismo frame.
+                    break
 
         # =========================
         # LIMPIAR ATAQUES

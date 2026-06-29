@@ -17,7 +17,7 @@ class HokuGrafico(PersonajeGrafico):
 
         # HITBOX
         self.rect = pygame.Rect(x, y, 80, 100)
-    
+
         self.offset_y = 20
 
         self.bloqueando_accion = False
@@ -28,8 +28,12 @@ class HokuGrafico(PersonajeGrafico):
         self.fuerza_salto   = -20
         self.en_suelo       = True
 
+        # Cooldown de daño por contacto (en milisegundos)
         self.tiempo_danio   = 0
-        self.cooldown_danio = 9999999
+        self.cooldown_danio = 1000  # 1 segundo de invulnerabilidad tras recibir daño
+
+        # Flag de invulnerabilidad, controlado por el cooldown
+        self.invulnerable = False
 
         self.mirando_derecha = True
 
@@ -49,6 +53,9 @@ class HokuGrafico(PersonajeGrafico):
 
         self.tiempo_danio += dt
 
+        # Actualizamos el flag de invulnerabilidad en base al cooldown
+        self.invulnerable = self.tiempo_danio < self.cooldown_danio
+
         tiene_salida_derecha   = escenario and escenario.salida_derecha   is not None
         tiene_salida_izquierda = escenario and escenario.salida_izquierda is not None
         tiene_salida_superior  = escenario and escenario.salida_superior  is not None
@@ -67,13 +74,10 @@ class HokuGrafico(PersonajeGrafico):
             # Movimiento horizontal
             self.rect.x += dx
 
-            # Colisión horizontal con enemigos
-            for enemigo in enemigos:
-                if self.rect.colliderect(enemigo.rect):
-                    if dx > 0:
-                        self.rect.right = enemigo.rect.left
-                    elif dx < 0:
-                        self.rect.left  = enemigo.rect.right
+            # 🔧 NOTA: se eliminó la colisión horizontal con enemigos.
+            # Los enemigos NO deben empujar a Hoku como si fueran paredes,
+            # porque eso impedía que los rects se superpongan y rompía
+            # la detección de daño por contacto en el GameController.
 
             # Colisión horizontal con plataformas
             for plataforma in plataformas:
@@ -115,16 +119,9 @@ class HokuGrafico(PersonajeGrafico):
             self.vel_y  += self.gravedad
             self.rect.y += self.vel_y
 
-            # Colisión vertical con enemigos
-            for enemigo in enemigos:
-                if self.rect.colliderect(enemigo.rect):
-                    if self.vel_y > 0:
-                        self.rect.bottom = enemigo.rect.top
-                        self.vel_y       = 0
-                        self.en_suelo    = True
-                    elif self.vel_y < 0:
-                        self.rect.top  = enemigo.rect.bottom
-                        self.vel_y     = 0
+            # 🔧 NOTA: se eliminó la colisión vertical con enemigos por la
+            # misma razón que arriba. El daño por contacto se maneja
+            # exclusivamente en GameController.actualizar().
 
             # Colisión vertical con plataformas
             for plataforma in plataformas:

@@ -1,10 +1,7 @@
 import pygame
 import math
 
-from src.vistas.personajes.personaje_grafico import (
-    PersonajeGrafico
-)
-
+from src.vistas.personajes.personaje_grafico import PersonajeGrafico
 
 class BichiluzGrafico(PersonajeGrafico):
 
@@ -15,13 +12,8 @@ class BichiluzGrafico(PersonajeGrafico):
         # =========================
         # ANIMACIONES
         # =========================
-        self.cargar_animacion(
-            "idle",
-            "src/assets/images/personajes/enemigos/bichiluz/bichiluz-idle.png", 2,150,150)
-
-        self.cargar_animacion(
-            "death",
-            "src/assets/images/personajes/enemigos/bichiluz/bichiluz-death.png",1,150,150)
+        self.cargar_animacion("idle", "src/assets/images/personajes/enemigos/bichiluz/bichiluz-idle.png", 2,150,150)
+        self.cargar_animacion("death", "src/assets/images/personajes/enemigos/bichiluz/bichiluz-death.png",1,150,150)
 
         self.image = self.animaciones["idle"][0]
 
