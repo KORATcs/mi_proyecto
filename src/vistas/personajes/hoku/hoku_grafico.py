@@ -74,11 +74,6 @@ class HokuGrafico(PersonajeGrafico):
             # Movimiento horizontal
             self.rect.x += dx
 
-            # 🔧 NOTA: se eliminó la colisión horizontal con enemigos.
-            # Los enemigos NO deben empujar a Hoku como si fueran paredes,
-            # porque eso impedía que los rects se superpongan y rompía
-            # la detección de daño por contacto en el GameController.
-
             # Colisión horizontal con plataformas
             for plataforma in plataformas:
 
@@ -118,10 +113,6 @@ class HokuGrafico(PersonajeGrafico):
             # Gravedad
             self.vel_y  += self.gravedad
             self.rect.y += self.vel_y
-
-            # 🔧 NOTA: se eliminó la colisión vertical con enemigos por la
-            # misma razón que arriba. El daño por contacto se maneja
-            # exclusivamente en GameController.actualizar().
 
             # Colisión vertical con plataformas
             for plataforma in plataformas:

@@ -157,7 +157,7 @@ class GameController:
             self.gestor_escenarios.escenario_actual
         )
 
-        escenario_actual.actualizar()
+        escenario_actual.actualizar(self.hoku_vista)
 
         # =========================
         # ENEMIGOS DEL ESCENARIO
@@ -259,7 +259,7 @@ class GameController:
 
             for enemigo in enemigos:
 
-                if self.hoku_vista.rect.colliderect(enemigo.rect):
+                if self.hoku_vista.rect.colliderect(enemigo.rect) and enemigo.modelo.estaVivo():
 
                     # enemigo daña a Hoku
                     enemigo.modelo.atacar(

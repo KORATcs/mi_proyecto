@@ -5,21 +5,21 @@ de manera agresiva hacia Hoku, detectándolo y atacándolo. Es un enemigo común
 
 class Perruga(Enemigo):
 
-    def __init__(self):
+    def __init__(self, limite_izq=0, limite_der=30):
         super().__init__("Perruga", 3, 1)
-        self.posicion = 0
+        self.posicion = limite_izq
         self.direccion = 1  # 1 = derecha, -1 = izquierda
-        self.limite_izq = 0
-        self.limite_der = 10
+        self.limite_izq = limite_izq
+        self.limite_der = limite_der
 
     def moverse(self):
-        if self.estaVivo(): # <--- AGREGAR ESTO
-            self.posicion += self.direccion
+        if self.estaVivo():
+            pass
+      #  if self.estaVivo():
+       #     self.posicion += self.direccion
 
-            if self.posicion >= self.limite_der or self.posicion <= self.limite_izq:
-                self.direccion *= -1 
-
-            print(f"{self.nombre} patrulla en posición {self.posicion}")
+        #    if self.posicion >= self.limite_der or self.posicion <= self.limite_izq:
+         #       self.direccion *= -1
 
     def ataque_especial(self, objetivo):
         """Metodo que permite a Perruga realizar un ataque especial desde abajo de la tierra,

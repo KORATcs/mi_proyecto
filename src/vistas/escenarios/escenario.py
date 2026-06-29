@@ -39,10 +39,19 @@ class Escenario:
     # =========================
     # ACTUALIZAR
     # =========================
-    def actualizar(self):
-
+    def actualizar(self, jugador=None):
+        """
+        Actualiza todas las entidades del escenario.
+        Recibe opcionalmente al jugador (Hoku) para que los enemigos 
+        puedan ejecutar su IA de persecución o ataque.
+        """
         for enemigo in self.enemigos:
-            enemigo.actualizar()
+            # Intentamos pasarle el jugador. Si el enemigo acepta el parámetro, lo usará.
+            try:
+                enemigo.actualizar(jugador)
+            except TypeError:
+                # Por si acaso algún enemigo viejo quedó sin el parámetro jugador
+                enemigo.actualizar()
         
         for plataforma in self.plataformas:
             if hasattr(plataforma, "update"):
