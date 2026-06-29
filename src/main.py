@@ -157,8 +157,6 @@ class GameController:
             self.gestor_escenarios.escenario_actual
         )
 
-        escenario_actual.actualizar()
-
         # =========================
         # ENEMIGOS DEL ESCENARIO
         # =========================
@@ -178,6 +176,27 @@ class GameController:
         saltando = (
             self.controlador_hoku.saltando
         )
+
+        # =========================
+        # 1. UPDATE HOKU (¡MOVIDO AQUÍ ARRIBA!)
+        # =========================
+        # Primero calculamos su nueva posición física para este frame
+        self.hoku_vista.update(
+            dx,
+            dy,
+            esta_atacando,
+            saltando,
+            self.dt,
+            self.limite_pantalla,
+            enemigos,
+            escenario=escenario_actual
+        )
+
+        # =========================
+        # 2. ESCENARIO ACTUAL (¡LLAMADO DESPUÉS!)
+        # =========================
+        # Ahora que Hoku ya se movió, pasamos su vista actualizada para la IA
+        escenario_actual.actualizar(self.hoku_vista)
 
         # =========================
         # CREAR ATAQUE
@@ -203,20 +222,6 @@ class GameController:
             self.ataques.append(
                 nuevo_ataque
             )
-
-        # =========================
-        # UPDATE HOKU
-        # =========================
-        self.hoku_vista.update(
-            dx,
-            dy,
-            esta_atacando,
-            saltando,
-            self.dt,
-            self.limite_pantalla,
-            enemigos,
-            escenario=escenario_actual
-        )
 
         # =========================
         # UPDATE ATAQUES
@@ -251,14 +256,11 @@ class GameController:
         # =========================
         # DAÑO POR CONTACTO
         # =========================
-        # 🔧 CAMBIO: ahora chequeamos primero si Hoku está invulnerable
-        # (gracias al flag que agregamos en HokuGrafico). Si lo está, ni
-        # siquiera entramos a aplicar daño, sin importar cuántos enemigos
-        # lo estén tocando ese frame.
         if not self.hoku_vista.invulnerable:
 
             for enemigo in enemigos:
 
+                # 🔧 Ahora solo te hace daño si el enemigo de verdad está vivo
                 if self.hoku_vista.rect.colliderect(enemigo.rect) and enemigo.modelo.estaVivo():
 
                     # enemigo daña a Hoku
@@ -269,10 +271,6 @@ class GameController:
                     # Reseteamos el contador para reiniciar el cooldown
                     self.hoku_vista.tiempo_danio = 0
                     self.hoku_vista.invulnerable = True
-
-                    # 🔧 CAMBIO: break para que un solo enemigo aplique daño
-                    # por "tick" de cooldown, en vez de sumar daño de todos
-                    # los enemigos que lo estén tocando en el mismo frame.
                     break
 
         # =========================

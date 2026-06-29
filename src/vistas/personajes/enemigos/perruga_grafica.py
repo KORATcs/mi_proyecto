@@ -10,7 +10,6 @@ class PerrugaGrafica(PersonajeGrafico):
         # =========================
         # ANIMACIONES
         # =========================
-        # Nota: Ajusté los frames a los números que me pasaste (2, 3, 5)
         self.cargar_animacion("walk", "src/assets/images/personajes/enemigos/perruga/perruga-walk.png", 2, 150, 150)
         self.cargar_animacion("attack", "src/assets/images/personajes/enemigos/perruga/perruga-attack.png", 3, 150, 150)
         self.cargar_animacion("death", "src/assets/images/personajes/enemigos/perruga/perruga-death.png", 5, 150, 150)
@@ -25,17 +24,14 @@ class PerrugaGrafica(PersonajeGrafico):
         self.rect.center = rect_imagen.center
 
         # =========================
-        # 🔧 CONFIGURACIÓN DE VELOCIDAD DE FRAMES (Milisegundos)
+        # CONFIGURACIÓN DE VELOCIDAD DE FRAMES (Milisegundos)
         # =========================
-        # Cuanto MENOR sea el número, MÁS RÁPIDO pasarán los frames.
-        self.vel_animacion_patrulla = 180    # Lento y pausado al patrullar
-        self.vel_animacion_alerta = 90       # Rápido y frenético al perseguir o atacar
-        
-        # Asignamos la velocidad inicial
+        self.vel_animacion_patrulla = 180    
+        self.vel_animacion_alerta = 90       
         self.velocidad_animacion = self.vel_animacion_patrulla 
 
         # =========================
-        # CONFIGURACIÓN DE PATRULLA EN PÍXELES
+        # CONFIGURACIÓN DE IA Y PATRULLA
         # =========================
         self.x_inicial = self.rect.x       
         self.rango_patrulla = 250          
@@ -44,6 +40,8 @@ class PerrugaGrafica(PersonajeGrafico):
         self.velocidad_patrulla = 1.0      
         self.velocidad_persecucion = 1.8   
         self.radio_vision = 300            
+        self.radio_ataque = 80    
+        self.vel_animacion_ataque = 260 # Mayor número = Más lento pasa cada frame del mordisco.  
 
         # =========================
         # ESTADOS Y DAÑO
@@ -53,9 +51,6 @@ class PerrugaGrafica(PersonajeGrafico):
         self.duracion_flash = 100
         self.vida_anterior = self.modelo._vida
 
-        self.vel_y = 0
-        self.gravedad = 0.5
-
     def actualizar(self, jugador=None):
         # Detectar daño por vida del modelo
         if self.modelo._vida < self.vida_anterior:
@@ -64,11 +59,10 @@ class PerrugaGrafica(PersonajeGrafico):
         self.vida_anterior = self.modelo._vida
 
         if self.modelo.estaVivo():
-            self.cambiar_estado("walk")
-            
             perseguiendo = False
+            atacando = False
             
-            # --- INTELIGENCIA ARTIFICIAL(Argentina) (PERSECUCIÓN) ---
+            # --- INTELIGENCIA ARTIFICIAL (CÁLCULO) ---
             if jugador is not None and jugador.modelo.estaVivo():
                 distancia_x = jugador.rect.centerx - self.rect.centerx
                 distancia_y = jugador.rect.centery - self.rect.centery
@@ -76,46 +70,47 @@ class PerrugaGrafica(PersonajeGrafico):
                 
                 if distancia <= self.radio_vision:
                     perseguiendo = True
-                    
-                    # Ajustamos la velocidad de la animación para que se vea más rápido
                     self.velocidad_animacion = self.vel_animacion_alerta
                     
                     if distancia_x > 0:
                         self.mirando_derecha = True
-                        self.rect.x += self.velocidad_persecucion
-                    elif distancia_x < 0:
+                    else:
                         self.mirando_derecha = False
-                        self.rect.x -= self.velocidad_persecucion
+                    
+                    if distancia <= self.radio_ataque:
+                        atacando = True
 
-            # --- PATRULLA NORMAL EN PÍXELES ---
-            if not perseguiendo:
-                # Volvemos a la velocidad de animación más lenta de patrulla
+            # --- MÁQUINA DE ESTADOS (COMPORTAMIENTO) ---
+            if atacando:
+                # 🔧 El ataque de Perruga se repite de manera continua (loop=True)
+                self.cambiar_estado("attack", loop=True)
+                self.velocidad_animacion = self.vel_animacion_ataque 
+            elif perseguiendo:
+                self.cambiar_estado("walk", loop=True)
+                distancia_x = jugador.rect.centerx - self.rect.centerx
+                if distancia_x > 0:
+                    self.rect.x += self.velocidad_persecucion
+                elif distancia_x < 0:
+                    self.rect.x -= self.velocidad_persecucion
+            else:
+                self.cambiar_estado("walk", loop=True)
                 self.velocidad_animacion = self.vel_animacion_patrulla
-
-                # Mover en la dirección actual
                 self.rect.x += self.velocidad_patrulla * self.direccion_x
 
-                # Sincronizar SIEMPRE la mirada con la dirección del movimiento
                 if self.direccion_x == 1:
                     self.mirando_derecha = True
                 else:
                     self.mirando_derecha = False
 
-                # Comprobar si se alejó mucho de su punto inicial
                 if self.rect.x >= self.x_inicial + self.rango_patrulla:
                     self.direccion_x = -1
-                    self.mirando_derecha = False
                 elif self.rect.x <= self.x_inicial - self.rango_patrulla:
                     self.direccion_x = 1
-                    self.mirando_derecha = True
         else:
-            self.cambiar_estado("death")
-            # Al morir, también puedes ajustar su velocidad si los 5 frames van muy lento/rápido
+            # 🔧 La muerte solo se ejecuta una vez (loop=False)
+            self.cambiar_estado("death", loop=False)
             self.velocidad_animacion = 300 
-            
-            self.rect.y += self.vel_y
 
-        # Aquí es donde el PersonajeGrafico usa el valor que acabamos de modificar:
         self.update_animacion(16)
 
     def dibujar(self, pantalla):

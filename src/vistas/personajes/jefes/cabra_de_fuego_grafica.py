@@ -14,7 +14,6 @@ class CabraDeFuegoGrafica(PersonajeGrafico):
         self.cargar_animacion("desafiar", "src/assets/images/personajes/jefes/cabraFuego/cabra-de-fuego-desafiar.png", 4, 150, 150)
 
         self.image = self.animaciones["walk"][0]
-        self.estados_no_loop.add("desafiar")
 
         # =========================
         # HITBOX

@@ -166,16 +166,20 @@ class HokuGrafico(PersonajeGrafico):
             if self.rect.left < limite_pantalla.left:
                 self.rect.left = limite_pantalla.left
 
-        # Animaciones
+        # ==================================================
+        # 🔧 ANIMACIONES ADAPTADAS A LA CLASE PADRE MODIFICADA
+        # ==================================================
         if not self.modelo.estaVivo():
-            self.cambiar_estado("death")
+            self.cambiar_estado("death", loop=False) # No repite al morir
+        elif esta_atacando:
+            self.cambiar_estado("attack", loop=False) # Da un zarpazo de un solo golpe
         else:
             if not self.en_suelo:
-                self.cambiar_estado("jump")
+                self.cambiar_estado("jump", loop=False) # El salto no repite bucles en el aire
             elif dx != 0:
-                self.cambiar_estado("walk")
+                self.cambiar_estado("walk", loop=True)  # Camina fluidamente
             else:
-                self.cambiar_estado("idle")
+                self.cambiar_estado("idle", loop=True)  # Respiración quieta fluida
 
         self.update_animacion(dt)
 
@@ -193,7 +197,3 @@ class HokuGrafico(PersonajeGrafico):
         rect_imagen.y += self.offset_y
 
         pantalla.blit(imagen_final, rect_imagen)
-        # print(self.rect.y, self.rect.bottom)
-
-        # DEBUG hitbox
-        # pygame.draw.rect(pantalla, (0, 255, 0), self.rect, 2)

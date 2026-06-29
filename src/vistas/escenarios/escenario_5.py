@@ -69,7 +69,8 @@ class EscenarioCinco(Escenario):
             plataforma_flotante
         )
 
-    def actualizar(self):
+    def actualizar(self, jugador=None):
+        super().actualizar(jugador)
 
         for plataforma in self.plataformas:
 
