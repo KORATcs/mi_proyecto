@@ -16,6 +16,7 @@ class Escenario:
         self.plataformas = []
         self.enemigos = []
         self.objetos = []
+        self.npcs = []
 
         # Conexiones metroidvania
         self.salida_derecha = None
@@ -56,6 +57,10 @@ class Escenario:
         for plataforma in self.plataformas:
             if hasattr(plataforma, "update"):
                 plataforma.update()
+        
+        for npc in self.npcs:
+            # Si tu actualizar pide un jugador, se lo pasamos
+            npc.actualizar(jugador)
 
     # =========================
     # DIBUJAR
@@ -70,6 +75,9 @@ class Escenario:
         for enemigo in self.enemigos:
             enemigo.dibujar(pantalla)
 
+        for npc in self.npcs:
+            npc.dibujar(pantalla)
+
     # =========================
     # CREACIÓN DE ELEMENTOS
     # =========================
@@ -78,7 +86,9 @@ class Escenario:
 
     def crear_enemigos(self):
         pass
-
+    
+    def crear_npcs(self):
+        pass
     # =========================
     # DETECCIÓN DE SALIDA
     # =========================

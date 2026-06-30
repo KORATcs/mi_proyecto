@@ -38,7 +38,7 @@ class HokuGrafico(PersonajeGrafico):
         self.mirando_derecha = True
 
         # Cambiar a False cuando quieras volver a la física normal
-        self.modo_flotante = False
+        self.modo_flotante = True
 
     # ==================================================
     # UPDATE
