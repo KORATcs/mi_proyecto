@@ -4,14 +4,15 @@ class ControladorHoku:
     def __init__(self):
         self.atacando = False
         self.saltando = False
+        self.interactuando = False # 🔧 NUEVO ESTADO
 
     def procesar_eventos(self, eventos):
         """Eventos puntuales (click, teclas presionadas una vez)"""
         self.atacando = False
         self.saltando = False
+        self.interactuando = False # 🔧 REINICIAMOS EN CADA FRAME
 
         for evento in eventos:
-            """Detecta eventos puntuales como ataques o saltos"""
             if evento.type == pygame.MOUSEBUTTONDOWN:
                 if evento.button == 1:
                     self.atacando = True
@@ -19,6 +20,10 @@ class ControladorHoku:
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_SPACE:
                     self.saltando = True
+                
+                # 🔧 NUEVO EVENTO: Detectar la tecla E para interactuar
+                if evento.key == pygame.K_e: 
+                    self.interactuando = True
 
     def obtener_movimiento(self):
         """Movimiento continuo (teclas mantenidas)"""

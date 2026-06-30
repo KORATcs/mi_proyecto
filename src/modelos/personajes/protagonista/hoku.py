@@ -12,6 +12,7 @@ class Hoku(Personaje):
         self.ataque = 1 #hace 1 de danio 
         self.habilidades = [] #ataque que puede utilizarse cuando derrote el primer jefe (fuego)
         self.fragmentos = 0 #fragmentos que se van a ir recolectando para incrementar la vida maxima
+        self.cabra_derrotada = False
 
     def saltar(self):
         print("Hoku salta")

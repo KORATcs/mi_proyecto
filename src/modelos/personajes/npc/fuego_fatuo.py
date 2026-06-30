@@ -1,34 +1,48 @@
+# src/modelos/personajes/npc/fuego_fatuo.py
+
 from src.modelos.personajes.npc.personajes_no_jugables import PersonajesNoJugables
 
 class FuegoFatuo(PersonajesNoJugables):
     
     def __init__(self):
         super().__init__("Fuego Fatuo")
-        # Ahora usamos estados en lugar de un simple True/False
-        self.estado_mision = "desconocido" 
+        self.dialogos_actuales = [] # Lista de textos a mostrar
+        self.indice_dialogo = 0     # En qué texto vamos
+        self.mostrando_dialogo = False
+        self.siguiendo_hoku = False
     
-    def interactuar(self, personaje_jugador):
-        """ Cambia el diálogo y la acción según el progreso de Hoku """
-        
-        if self.estado_mision == "desconocido":
-            # Primer encuentro
-            print(f"{self.nombre}: ¡Por favor, {personaje_jugador.nombre}! Ayúdame. Esta enredadera me atrapó.")
-            print(f"{self.nombre}: Si logras quemarla con el fuego sagrado de la Cabra, te guiaré a la Grieta.")
-            self.estado_mision = "esperando_rescate"
+    def interactuar(self, jugador_logico, enemigos_vivos):
+        # 1. Si ya estamos hablando, avanzamos al siguiente globo
+        if self.mostrando_dialogo:
+            self.indice_dialogo += 1
             
-        elif self.estado_mision == "esperando_rescate":
-            # Hoku vuelve a hablar pero verifica si ya tiene el poder
-            if personaje_jugador.tiene_poder_fuego:
-                print(f"{self.nombre}: ¡Tienes el poder del fuego! ¡Úsalo en la enredadera!")
-                # Nota: Acá el jugador tendría que atacar la enredadera para romperla.
-            else:
-                print(f"{self.nombre}: Necesitas derrotar a la Cabra de Fuego para conseguir su poder...")
+            # Si llegamos al final del diálogo, cerramos la charla
+            if self.indice_dialogo >= len(self.dialogos_actuales):
+                self.mostrando_dialogo = False
                 
-    def liberar_oficialmente(self):
-        """ Esto se llama cuando la enredadera muere/se quema """
-        self.estado_mision = "liberado"
-        print(f"¡{self.nombre} ha sido liberado!")
-        self.volar()
+                # Si el diálogo que acaba de terminar era el de victoria, ¡lo empezamos a seguir!
+                if jugador_logico.cabra_derrotada and not self.siguiendo_hoku and enemigos_vivos == 0:
+                    self.siguiendo_hoku = True
+            return
+
+        # 2. Si NO estábamos hablando, iniciamos la charla desde cero
+        self.indice_dialogo = 0
+        self.mostrando_dialogo = True
+
+        if enemigos_vivos > 0:
+            self.dialogos_actuales = ["..."]
         
-    def volar(self):
-        print(f"{self.nombre} activa su modo de vuelo para guiar a Hoku a la Grieta.")
+        elif self.siguiendo_hoku:
+            self.dialogos_actuales = ["¡Vamos, la grieta está cerca!"]
+        
+        elif not jugador_logico.cabra_derrotada:
+            self.dialogos_actuales = [
+                "¡Oh! Me has salvado de ese monstruo...",
+                "Pero sigo paralizado por el miedo.",
+                "Esa Cabra de Fuego me aterra. Mátala y te ayudaré."
+            ]
+        else:
+            self.dialogos_actuales = [
+                "¿La derrotaste? ¡Eres increíble!",
+                "Te seguiré hasta la salida, vamos."
+            ]
