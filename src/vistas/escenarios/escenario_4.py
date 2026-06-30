@@ -44,8 +44,8 @@ class EscenarioCuatro(Escenario):
     def crear_enemigos(self):
         # Generar al estático Medania (Ajusta la posición en su cueva)
         medania = MedaniaGrafica(
-            400,
-            200,
+            1120,
+            5,
             Medania()
         )
         self.enemigos.append(medania)

@@ -48,7 +48,7 @@ class PerrugaGrafica(PersonajeGrafico):
         # =========================
         self.recibiendo_danio = False
         self.tiempo_flash = 0
-        self.duracion_flash = 100
+        self.duracion_flash = 0
         self.vida_anterior = self.modelo._vida
 
     def actualizar(self, jugador=None):

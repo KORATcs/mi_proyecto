@@ -3,6 +3,12 @@ from src.vistas.escenarios.escenario import Escenario
 from src.vistas.escenarios.mapa_escenario import MAPA_ESCENARIO_8
 from src.vistas.plataformas.plataforma_grafica import PlataformaGrafica
 
+# Importaciones del modelo y vista de Medania
+from src.modelos.personajes.enemigos.medania import Medania
+from src.vistas.personajes.enemigos.medania_grafica import MedaniaGrafica  
+from src.modelos.personajes.enemigos.perruga import Perruga 
+from src.vistas.personajes.enemigos.perruga_grafica import PerrugaGrafica     
+
 
 # ==============================================================
 # ESCENARIO 8 — izquierda -> 7 | arriba -> 9
@@ -44,5 +50,18 @@ class EscenarioOcho(Escenario):
 
                     self.plataformas.append(plataforma)
 
-    def crear_enemigos(self): pass
-
+    def crear_enemigos(self):
+        # Generar al estático Medania (Ajusta la posición en su cueva)
+        medania = MedaniaGrafica(
+            500,
+            150,
+            Medania()
+        )
+        # Generar un solo Perruga (Ajusta x=600, y=500 según tus plataformas)
+        perruga = PerrugaGrafica(
+            600,
+            500,
+            Perruga()
+        )
+        self.enemigos.append(perruga)
+        self.enemigos.append(medania)

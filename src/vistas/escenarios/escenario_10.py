@@ -3,6 +3,10 @@ from src.vistas.escenarios.escenario import Escenario
 from src.vistas.escenarios.mapa_escenario import MAPA_ESCENARIO_10
 from src.vistas.plataformas.plataforma_grafica import PlataformaGrafica
 
+# Importaciones del modelo y vista de Hibrido
+from src.modelos.personajes.enemigos.hibrido import Hibrido
+from src.vistas.personajes.enemigos.hibrido_grafico import HibridoGrafico
+
 # ==============================================================
 # ESCENARIO 10 — derecha -> 9
 # ==============================================================
@@ -43,5 +47,12 @@ class EscenarioDiez(Escenario):
 
                     self.plataformas.append(plataforma)
 
-    def crear_enemigos(self): pass
+    def crear_enemigos(self): 
+        # Generar un solo Híbrido patrullero
+        hibrido = HibridoGrafico(
+            600,
+            400,
+            Hibrido()
+        )
+        self.enemigos.append(hibrido)
 

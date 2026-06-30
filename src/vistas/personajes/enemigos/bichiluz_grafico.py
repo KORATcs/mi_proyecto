@@ -51,7 +51,7 @@ class BichiluzGrafico(PersonajeGrafico):
 
         self.tiempo_flash = 0
 
-        self.duracion_flash = 100
+        self.duracion_flash = 0
 
         self.vida_anterior = self.modelo._vida
 

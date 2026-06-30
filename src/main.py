@@ -10,7 +10,7 @@ from src.modelos.personajes.protagonista.hoku import Hoku
 # VISTAS
 # =========================
 from src.vistas.personajes.hoku.hoku_grafico import HokuGrafico
-from src.vistas.ataques.ataque_grafico import ZarpazoGrafico
+from src.vistas.ataques.zarpazo_grafico import ZarpazoGrafico
 from src.vistas.ui.hud import HUD
 
 # =========================
@@ -254,24 +254,35 @@ class GameController:
                     )
 
         # =========================
-        # DAÑO POR CONTACTO
+        # DAÑO POR CONTACTO Y PROYECTILES
         # =========================
-        if not self.hoku_vista.invulnerable:
-
-            for enemigo in enemigos:
-
-                # 🔧 Ahora solo te hace daño si el enemigo de verdad está vivo
+        for enemigo in enemigos:
+            
+            # 1. 🔧 Chequeo de daño por el cuerpo del enemigo (si está vivo)
+            if not self.hoku_vista.invulnerable:
                 if self.hoku_vista.rect.colliderect(enemigo.rect) and enemigo.modelo.estaVivo():
-
                     # enemigo daña a Hoku
-                    enemigo.modelo.atacar(
-                        self.hoku_logico
-                    )
+                    enemigo.modelo.atacar(self.hoku_logico)
 
                     # Reseteamos el contador para reiniciar el cooldown
                     self.hoku_vista.tiempo_danio = 0
                     self.hoku_vista.invulnerable = True
-                    break
+                    # Nota: Quitamos el 'break' para que si hay más enemigos o proyectiles,
+                    # el bucle siga procesando todo el frame correctamente.
+
+            # 2. 🔧 Chequeo de daño por proyectiles (Bolas de fuego de la Cabra)
+            if hasattr(enemigo, "proyectiles_pantalla"):
+                for proyectil in enemigo.proyectiles_pantalla:
+                    if self.hoku_vista.rect.colliderect(proyectil.rect) and not self.hoku_vista.invulnerable:
+                        # Las bolas de fuego dañan a Hoku
+                        enemigo.modelo.atacar(self.hoku_logico) 
+                        
+                        # Activamos la invulnerabilidad de Hoku
+                        self.hoku_vista.tiempo_danio = 0
+                        self.hoku_vista.invulnerable = True
+                        
+                        # Destruimos la bola de fuego para que no te siga golpeando
+                        proyectil.activo = False
 
         # =========================
         # LIMPIAR ATAQUES
