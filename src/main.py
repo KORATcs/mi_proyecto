@@ -12,14 +12,14 @@ from src.modelos.personajes.protagonista.hoku import Hoku
 from src.vistas.personajes.hoku.hoku_grafico import HokuGrafico
 from src.vistas.ataques.zarpazo_grafico import ZarpazoGrafico
 from src.vistas.ui.hud import HUD
-from src.vistas.ui.vista_dialogos import VistaDialogos # 🔧 NUEVO: Importamos la vista de diálogos
+from src.vistas.ui.vista_dialogos import VistaDialogos
 
 # =========================
 # CONTROLADORES
 # =========================
 from src.controladores.controlador_hoku import ControladorHoku
 from src.controladores.gestor_escenarios import GestorEscenarios
-
+from src.controladores.gestor_audio.gestor_audio import GestorAudio
 
 class GameController:
 
@@ -115,6 +115,16 @@ class GameController:
         # ACOMPAÑANTES GLOBALES
         # =========================
         self.acompanantes = [] # Lista que guarda a los NPCs que te siguen entre pantallas
+
+        # Instanciamos nuestro gestor de audio separado
+        self.audio = GestorAudio()
+        
+        # Cargamos los efectos que vayamos a usar en el juego
+        #self.audio.cargar_efecto("golpe_hoku", "src/assets/audio/sfx/golpe.wav")
+        #self.audio.cargar_efecto("dialogo_next", "src/assets/audio/sfx/pop.wav")
+
+        # ¡Y largamos la música de fondo al toque!
+        self.audio.reproducir_musica("src/assets/musica/ambiente/MainSong-1.mp3", volumen=1.0)
 
     # ==================================================
     # LOOP PRINCIPAL
