@@ -98,7 +98,7 @@ class GameController:
             20
         )
         
-        # 🔧 NUEVO: Instanciamos la vista visual de los diálogos
+        # NUEVO: Instanciamos la vista visual de los diálogos
         self.vista_dialogos = VistaDialogos()
 
         # =========================
@@ -110,6 +110,11 @@ class GameController:
         # ATAQUES
         # =========================
         self.ataques = []
+
+        # =========================
+        # ACOMPAÑANTES GLOBALES
+        # =========================
+        self.acompanantes = [] # Lista que guarda a los NPCs que te siguen entre pantallas
 
     # ==================================================
     # LOOP PRINCIPAL
@@ -161,6 +166,44 @@ class GameController:
             self.gestor_escenarios.escenario_actual
         )
 
+        # ==============================================================
+        # LÓGICA DE ACOMPAÑANTES
+        # ==============================================================
+        # 🔧 1. Reclutamos al Fuego Fatuo usando TU variable 'siguiendo_hoku'
+        for npc in escenario_actual.npcs[:]: # El [:] evita bugs al borrar elementos de la lista en vivo
+            if hasattr(npc, 'modelo') and getattr(npc.modelo, 'siguiendo_hoku', False):
+                escenario_actual.npcs.remove(npc)  # Lo quitamos del mapa estático
+                self.acompanantes.append(npc)      # ¡Se vuelve un compañero de viaje!
+
+        # 2. Movimiento suave e inercia fantasmagórica (Lerp)
+        for ac in self.acompanantes:
+
+            if hasattr(ac, 'update'):
+                ac.update(self.dt) # O ac.update() si no usa delta time
+            elif hasattr(ac, 'actualizar'):
+                ac.actualizar()
+
+            # Calculamos la posición detrás de Hoku según hacia dónde mire
+            offset_x = -45 if self.hoku_vista.mirando_derecha else 45
+            destino_x = self.hoku_vista.rect.centerx + offset_x
+            destino_y = self.hoku_vista.rect.top - 25 # Flota un poquito arriba de su cabeza
+            
+            # El truco matemático: se acerca un 8% (0.08) a su destino en cada frame.
+            # Esto hace que flote orgánicamente y te siga con un retraso suave muy lindo.
+            ac.rect.centerx += (destino_x - ac.rect.centerx) * 0.08
+            ac.rect.centery += (destino_y - ac.rect.centery) * 0.08
+
+            # 3. CONDICIÓN ESPECIAL: Llegada al Escenario 12 (La Salida)
+            # (Asegurate de que "EscenarioDoce" coincida con el nombre real de tu clase)
+            if escenario_actual.__class__.__name__ == "EscenarioDoce":
+                # Cambiamos su destino para que vuele hacia arriba escapando de la pantalla
+                destino_y = -100 
+                ac.rect.centery += (destino_y - ac.rect.centery) * 0.04 # Sube despidiéndose
+                
+                # Una vez que sale por completo de la pantalla, lo eliminamos del juego
+                if ac.rect.bottom < 0:
+                    self.acompanantes.remove(ac)
+
         # =========================
         # ENEMIGOS DEL ESCENARIO
         # =========================
@@ -181,12 +224,12 @@ class GameController:
             self.controlador_hoku.saltando
         )
         
-        # 🔧 NUEVO: Leemos si se presionó la tecla de interacción
+        # NUEVO: Leemos si se presionó la tecla de interacción
         interactuando = (
             self.controlador_hoku.interactuando
         )
         
-        # 🔧 NUEVO: Ejecutamos lógica de interacción si se presionó la tecla
+        # NUEVO: Ejecutamos lógica de interacción si se presionó la tecla
         if interactuando:
             self.verificar_interacciones()
 
@@ -208,8 +251,13 @@ class GameController:
         # 2. ESCENARIO ACTUAL
         # =========================
         escenario_actual.actualizar(self.hoku_vista)
-        
-        # 🔧 NUEVO: Actualizamos lógica visual de diálogos (fade y proximidad)
+
+        # NUEVO: Le conectamos la referencia de Hoku a la Cabra automáticamente
+        for enemigo in escenario_actual.enemigos:
+            if hasattr(enemigo, 'modelo') and enemigo.modelo.__class__.__name__ == "CabraDeFuego":
+                enemigo.modelo.jugador_logico = self.hoku_logico
+
+        # NUEVO: Actualizamos lógica visual de diálogos (fade y proximidad)
         self.vista_dialogos.actualizar(
             self.hoku_vista.rect, 
             escenario_actual.npcs
@@ -345,6 +393,14 @@ class GameController:
         )
 
         # =========================
+        # DIBUJAR ACOMPAÑANTES
+        # =========================
+        # 🔧 Dibujamos al fueguito por encima de Hoku en cualquier pantalla donde esté
+        for ac in self.acompanantes:
+            if hasattr(ac, 'dibujar'):
+                ac.dibujar(self.pantalla)
+
+        # =========================
         # DIBUJAR ATAQUES
         # =========================
         for ataque in self.ataques:
@@ -393,8 +449,8 @@ class GameController:
         # 2. Recorremos los NPCs del escenario
         for npc in escenario_actual.npcs:
             
-            # Ampliamos el rectángulo lógico igual que hicimos para lo visual (150px extra)
-            area_interaccion = npc.rect.inflate(150, 150)
+            # Ampliamos el rectángulo lógico igual que hicimos para lo visual
+            area_interaccion = npc.rect.inflate(250, 250)
             
             # 3. Si Hoku está en el área de interacción
             if self.hoku_vista.rect.colliderect(area_interaccion):

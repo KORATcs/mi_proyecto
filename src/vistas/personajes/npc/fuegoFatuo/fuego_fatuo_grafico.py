@@ -49,7 +49,7 @@ class FuegoFatuoGrafico(PersonajeGrafico):
 
         elif self.estado_npc == "guiando" and jugador is not None:
             # --- FASE 2: LIBERADO Y SIGUIENDO A HOKU ---
-            # Queremos que se posicione un poco arriba y atrás de Hoku (como una mascota voladora)
+            # Queremos que se posicione un poco arriba y atrás de Hoku
             offset_x = -40 if jugador.mirando_derecha else 40
             offset_y = -50
             
@@ -60,8 +60,8 @@ class FuegoFatuoGrafico(PersonajeGrafico):
             distancia_x = objetivo_x - self.rect.centerx
             distancia_y = objetivo_y - self.rect.centery
 
-            # 🔧 Acercamiento suave (Interpolación lineal / Lerp)
-            # Se mueve solo un 5% de la distancia por frame. Esto le da un efecto de vuelo elástico hermoso.
+            # Acercamiento suave (Interpolación lineal / Lerp)
+            # Se mueve solo un 5% de la distancia por frame..
             self.rect.x += distancia_x * 0.05
             self.rect.y += distancia_y * 0.05
 
@@ -71,7 +71,7 @@ class FuegoFatuoGrafico(PersonajeGrafico):
             elif distancia_x < -1:
                 self.mirando_derecha = False
 
-            # Le agregamos la pequeña oscilación extra mientras vuela para que no pierda la magia
+            # Le agregamos la pequeña oscilación extra mientras vuela
             tiempo = pygame.time.get_ticks() / 200
             self.rect.y += int(math.sin(tiempo) * 3)
 
