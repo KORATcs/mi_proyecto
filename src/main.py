@@ -13,6 +13,7 @@ from src.vistas.personajes.hoku.hoku_grafico import HokuGrafico
 from src.vistas.ataques.zarpazo_grafico import ZarpazoGrafico
 from src.vistas.ui.hud import HUD
 from src.vistas.ui.vista_dialogos import VistaDialogos
+from src.vistas.menu.menu_principal_grafico import MenuPrincipalGrafico
 
 # =========================
 # CONTROLADORES
@@ -38,6 +39,7 @@ class GameController:
         self.FPS = 100
 
         self.NEGRO = (0, 0, 0)
+        self.BLANCO = (255, 255, 255) # Útil para textos
 
         # =========================
         # VENTANA
@@ -49,14 +51,13 @@ class GameController:
         pygame.display.set_caption("Hoku")
 
         # =========================
-        # CLOCK
+        # CLOCK Y ESTADO
         # =========================
         self.clock = pygame.time.Clock()
-
-        # =========================
-        # ESTADO PRINCIPAL
-        # =========================
         self.ejecutando = True
+
+        # 🔧 NUEVO: MAQUINA DE ESTADOS (Puede ser "MENU", "JUGANDO", etc.)
+        self.estado_juego = "MENU"
 
         # =========================
         # LÍMITES PANTALLA
@@ -69,278 +70,164 @@ class GameController:
         )
 
         # =========================
-        # GESTOR DE ESCENARIOS
+        # INICIALIZACIÓN (MENÚ Y AUDIO)
+        # =========================
+        # 🔧 IMPORTANTE: Acá instanciarás tu menú real cuando lo crees
+        self.menu_principal = MenuPrincipalGrafico(self.ANCHO, self.ALTO)
+        
+        self.audio = GestorAudio()
+        self.audio.reproducir_musica("src/assets/musica/ambiente/MainSong-1.mp3", volumen=1.0)
+
+
+        # =========================
+        # INICIALIZACIÓN (JUEGO)
         # =========================
         self.gestor_escenarios = GestorEscenarios()
-
         self.gestor_escenarios.cargar_escenario(1)
-
-        # =========================
-        # MODELO HOKU
-        # =========================
         self.hoku_logico = Hoku()
-
-        # =========================
-        # VISTA HOKU
-        # =========================
-        self.hoku_vista = HokuGrafico(
-            600,
-            100,
-            self.hoku_logico
-        )
-
-        # =========================
-        # HUD Y DIÁLOGOS
-        # =========================
-        self.hud_hoku = HUD(
-            self.hoku_logico,
-            20,
-            20
-        )
-        
-        # NUEVO: Instanciamos la vista visual de los diálogos
+        self.hoku_vista = HokuGrafico(600, 100, self.hoku_logico)
+        self.hud_hoku = HUD(self.hoku_logico, 20, 20)
         self.vista_dialogos = VistaDialogos()
-
-        # =========================
-        # CONTROLADOR
-        # =========================
         self.controlador_hoku = ControladorHoku()
-
-        # =========================
-        # ATAQUES
-        # =========================
         self.ataques = []
+        self.acompanantes = [] 
 
-        # =========================
-        # ACOMPAÑANTES GLOBALES
-        # =========================
-        self.acompanantes = [] # Lista que guarda a los NPCs que te siguen entre pantallas
-
-        # Instanciamos nuestro gestor de audio separado
-        self.audio = GestorAudio()
-        
-        # Cargamos los efectos que vayamos a usar en el juego
-        #self.audio.cargar_efecto("golpe_hoku", "src/assets/audio/sfx/golpe.wav")
-        #self.audio.cargar_efecto("dialogo_next", "src/assets/audio/sfx/pop.wav")
-
-        # ¡Y largamos la música de fondo al toque!
-        self.audio.reproducir_musica("src/assets/musica/ambiente/MainSong-1.mp3", volumen=1.0)
 
     # ==================================================
     # LOOP PRINCIPAL
     # ==================================================
     def ejecutar(self):
-
         while self.ejecutando:
-
             self.dt = self.clock.tick(self.FPS)
-
             self.eventos()
+            
+            # NUEVO: Dividimos la lógica según el estado actual
 
-            self.actualizar()
-
-            self.dibujar()
+            if self.estado_juego == "MENU":
+                self.actualizar_menu()
+                self.dibujar_menu()
+            elif self.estado_juego == "JUGANDO":
+                self.actualizar_juego()
+                self.dibujar_juego()
 
             pygame.display.flip()
 
         pygame.quit()
-
         sys.exit()
 
     # ==================================================
     # EVENTOS
     # ==================================================
     def eventos(self):
-
+        # 1. Obtenemos todas las teclas/clics que se tocaron en este frame
         self.eventos_actuales = pygame.event.get()
 
+        # 2. Revisamos si el jugador cerró la ventana en la cruz (X)
         for evento in self.eventos_actuales:
-
             if evento.type == pygame.QUIT:
-
                 self.ejecutando = False
 
-        self.controlador_hoku.procesar_eventos(
-            self.eventos_actuales
-        )
+        # ==============================================================
+        # 🔧 3. DISTRIBUCIÓN DE EVENTOS SEGÚN EL ESTADO
+        # ==============================================================
+        if self.estado_juego == "MENU":
+            # Si estamos en el menú, le mandamos las teclas a la clase MenuPrincipal
+            self.menu_principal.procesar_eventos(self.eventos_actuales)
+            
+        elif self.estado_juego == "JUGANDO":
+            # Si estamos jugando, le mandamos las teclas al controlador de Hoku
+            self.controlador_hoku.procesar_eventos(self.eventos_actuales)
 
     # ==================================================
-    # UPDATE
+    # LÓGICA Y DIBUJO: MENÚ
     # ==================================================
-    def actualizar(self):
+    def actualizar_menu(self):
+        self.menu_principal.actualizar(self.dt)
+        if self.menu_principal.iniciar_juego:
+            self.estado_juego = "JUGANDO"
 
-        # =========================
-        # ESCENARIO ACTUAL
-        # =========================
-        escenario_actual = (
-            self.gestor_escenarios.escenario_actual
-        )
+    def dibujar_menu(self):
+        self.menu_principal.dibujar(self.pantalla)
 
-        # ==============================================================
-        # LÓGICA DE ACOMPAÑANTES
-        # ==============================================================
-        # 🔧 1. Reclutamos al Fuego Fatuo usando TU variable 'siguiendo_hoku'
-        for npc in escenario_actual.npcs[:]: # El [:] evita bugs al borrar elementos de la lista en vivo
+        self.pantalla.fill(self.NEGRO)
+        self.menu_principal.dibujar(self.pantalla)
+
+
+    # ==================================================
+    # LÓGICA: JUEGO (Tu código original de actualizar)
+    # ==================================================
+    def actualizar_juego(self):
+        
+        escenario_actual = self.gestor_escenarios.escenario_actual
+
+        # 1. Acompañantes
+        for npc in escenario_actual.npcs[:]: 
             if hasattr(npc, 'modelo') and getattr(npc.modelo, 'siguiendo_hoku', False):
-                escenario_actual.npcs.remove(npc)  # Lo quitamos del mapa estático
-                self.acompanantes.append(npc)      # ¡Se vuelve un compañero de viaje!
+                escenario_actual.npcs.remove(npc)  
+                self.acompanantes.append(npc)      
 
-        # 2. Movimiento suave e inercia fantasmagórica (Lerp)
         for ac in self.acompanantes:
-
             if hasattr(ac, 'update'):
-                ac.update(self.dt) # O ac.update() si no usa delta time
+                ac.update(self.dt) 
             elif hasattr(ac, 'actualizar'):
                 ac.actualizar()
 
-            # Calculamos la posición detrás de Hoku según hacia dónde mire
             offset_x = -45 if self.hoku_vista.mirando_derecha else 45
             destino_x = self.hoku_vista.rect.centerx + offset_x
-            destino_y = self.hoku_vista.rect.top - 25 # Flota un poquito arriba de su cabeza
+            destino_y = self.hoku_vista.rect.top - 25 
             
-            # El truco matemático: se acerca un 8% (0.08) a su destino en cada frame.
-            # Esto hace que flote orgánicamente y te siga con un retraso suave muy lindo.
             ac.rect.centerx += (destino_x - ac.rect.centerx) * 0.08
             ac.rect.centery += (destino_y - ac.rect.centery) * 0.08
 
-            # 3. CONDICIÓN ESPECIAL: Llegada al Escenario 12 (La Salida)
-            # (Asegurate de que "EscenarioDoce" coincida con el nombre real de tu clase)
             if escenario_actual.__class__.__name__ == "EscenarioDoce":
-                # Cambiamos su destino para que vuele hacia arriba escapando de la pantalla
                 destino_y = -100 
-                ac.rect.centery += (destino_y - ac.rect.centery) * 0.04 # Sube despidiéndose
-                
-                # Una vez que sale por completo de la pantalla, lo eliminamos del juego
+                ac.rect.centery += (destino_y - ac.rect.centery) * 0.04 
                 if ac.rect.bottom < 0:
                     self.acompanantes.remove(ac)
 
-        # =========================
-        # ENEMIGOS DEL ESCENARIO
-        # =========================
+        # 2. Inputs Hoku
         enemigos = escenario_actual.enemigos
-
-        # =========================
-        # MOVIMIENTO HOKU
-        # =========================
-        dx, dy = (
-            self.controlador_hoku.obtener_movimiento()
-        )
-
-        esta_atacando = (
-            self.controlador_hoku.atacando
-        )
-
-        saltando = (
-            self.controlador_hoku.saltando
-        )
+        dx, dy = self.controlador_hoku.obtener_movimiento()
+        esta_atacando = self.controlador_hoku.atacando
+        saltando = self.controlador_hoku.saltando
+        interactuando = self.controlador_hoku.interactuando
         
-        # NUEVO: Leemos si se presionó la tecla de interacción
-        interactuando = (
-            self.controlador_hoku.interactuando
-        )
-        
-        # NUEVO: Ejecutamos lógica de interacción si se presionó la tecla
         if interactuando:
             self.verificar_interacciones()
 
-        # =========================
-        # 1. UPDATE HOKU
-        # =========================
-        self.hoku_vista.update(
-            dx,
-            dy,
-            esta_atacando,
-            saltando,
-            self.dt,
-            self.limite_pantalla,
-            enemigos,
-            escenario=escenario_actual
-        )
-
-        # =========================
-        # 2. ESCENARIO ACTUAL
-        # =========================
+        # 3. Update Hoku y Escenario
+        self.hoku_vista.update(dx, dy, esta_atacando, saltando, self.dt, self.limite_pantalla, enemigos, escenario=escenario_actual)
         escenario_actual.actualizar(self.hoku_vista)
 
-        # NUEVO: Le conectamos la referencia de Hoku a la Cabra automáticamente
         for enemigo in escenario_actual.enemigos:
             if hasattr(enemigo, 'modelo') and enemigo.modelo.__class__.__name__ == "CabraDeFuego":
                 enemigo.modelo.jugador_logico = self.hoku_logico
 
-        # NUEVO: Actualizamos lógica visual de diálogos (fade y proximidad)
-        self.vista_dialogos.actualizar(
-            self.hoku_vista.rect, 
-            escenario_actual.npcs
-        )
+        self.vista_dialogos.actualizar(self.hoku_vista.rect, escenario_actual.npcs)
 
-        # =========================
-        # CREAR ATAQUE
-        # =========================
-        if (
-            esta_atacando
-            and not self.hoku_vista.bloqueando_accion
-        ):
+        # 4. Ataques
+        if esta_atacando and not self.hoku_vista.bloqueando_accion:
+            offset = 40 if self.hoku_vista.mirando_derecha else -40
+            nuevo_ataque = ZarpazoGrafico(self.hoku_vista.rect.x + offset, self.hoku_vista.rect.y, self.hoku_vista.mirando_derecha, self.hoku_vista.animaciones)
+            self.ataques.append(nuevo_ataque)
 
-            offset = (
-                40
-                if self.hoku_vista.mirando_derecha
-                else -40
-            )
-
-            nuevo_ataque = ZarpazoGrafico(
-                self.hoku_vista.rect.x + offset,
-                self.hoku_vista.rect.y,
-                self.hoku_vista.mirando_derecha,
-                self.hoku_vista.animaciones
-            )
-
-            self.ataques.append(
-                nuevo_ataque
-            )
-
-        # =========================
-        # UPDATE ATAQUES
-        # =========================
         for ataque in self.ataques:
-
             ataque.update(self.dt)
-
             for enemigo in enemigos:
-
-                if (
-                    ataque.rect.colliderect(
-                        enemigo.rect
-                    )
-                    and enemigo.modelo
-                    not in ataque.golpeados
-                ):
-
-                    # Hoku daña enemigo
-                    self.hoku_logico.atacar(
-                        enemigo.modelo
-                    )
-
-                    # Flash blanco
+                if ataque.rect.colliderect(enemigo.rect) and enemigo.modelo not in ataque.golpeados:
+                    self.hoku_logico.atacar(enemigo.modelo)
                     if hasattr(enemigo, "recibir_golpe"):
                         enemigo.recibir_golpe()
+                    ataque.golpeados.append(enemigo.modelo)
 
-                    ataque.golpeados.append(
-                        enemigo.modelo
-                    )
-
-        # =========================
-        # DAÑO POR CONTACTO Y PROYECTILES
-        # =========================
+        # 5. Daño recibido
         for enemigo in enemigos:
-            
-            # 1. Chequeo de daño por el cuerpo del enemigo
             if not self.hoku_vista.invulnerable:
                 if self.hoku_vista.rect.colliderect(enemigo.rect) and enemigo.modelo.estaVivo():
                     enemigo.modelo.atacar(self.hoku_logico)
                     self.hoku_vista.tiempo_danio = 0
                     self.hoku_vista.invulnerable = True
 
-            # 2. Chequeo de daño por proyectiles
             if hasattr(enemigo, "proyectiles_pantalla"):
                 for proyectil in enemigo.proyectiles_pantalla:
                     if self.hoku_vista.rect.colliderect(proyectil.rect) and not self.hoku_vista.invulnerable:
@@ -349,123 +236,46 @@ class GameController:
                         self.hoku_vista.invulnerable = True
                         proyectil.activo = False
 
-        # =========================
-        # LIMPIAR ATAQUES
-        # =========================
-        self.ataques = [
-
-            ataque
-
-            for ataque in self.ataques
-
-            if ataque.activo
-        ]
-
-        # =========================
-        # TRANSICIONES
-        # =========================
+        self.ataques = [ataque for ataque in self.ataques if ataque.activo]
         self.controlar_transiciones()
 
     # ==================================================
-    # DIBUJAR
+    # DIBUJO: JUEGO (Tu código original de dibujar)
     # ==================================================
-    def dibujar(self):
+    def dibujar_juego(self):
+        self.pantalla.fill(self.NEGRO)
+        escenario_actual = self.gestor_escenarios.escenario_actual
 
-        self.pantalla.fill(
-            self.NEGRO
-        )
+        escenario_actual.dibujar(self.pantalla)
 
-        escenario_actual = (
-            self.gestor_escenarios.escenario_actual
-        )
-
-        # =========================
-        # DIBUJAR ESCENARIO
-        # =========================
-        escenario_actual.dibujar(
-            self.pantalla
-        )
-
-        # =========================
-        # DIBUJAR ENEMIGOS
-        # =========================
         for enemigo in escenario_actual.enemigos:
+            enemigo.dibujar(self.pantalla)
 
-            enemigo.dibujar(
-                self.pantalla
-            )
+        self.hoku_vista.dibujar(self.pantalla)
 
-        # =========================
-        # DIBUJAR HOKU
-        # =========================
-        self.hoku_vista.dibujar(
-            self.pantalla
-        )
-
-        # =========================
-        # DIBUJAR ACOMPAÑANTES
-        # =========================
-        # 🔧 Dibujamos al fueguito por encima de Hoku en cualquier pantalla donde esté
         for ac in self.acompanantes:
             if hasattr(ac, 'dibujar'):
                 ac.dibujar(self.pantalla)
 
-        # =========================
-        # DIBUJAR ATAQUES
-        # =========================
         for ataque in self.ataques:
+            ataque.dibujar(self.pantalla)
 
-            ataque.dibujar(
-                self.pantalla
-            )
-
-        # =========================
-        # DIBUJAR HUD
-        # =========================
-        self.hud_hoku.dibujar(
-            self.pantalla
-        )
-        
-        # =========================
-        # DIBUJAR INTERFAZ DIÁLOGOS
-        # =========================
-        # 🔧 NUEVO: Se dibuja por encima de todo
-        self.vista_dialogos.dibujar(
-            self.pantalla, 
-            self.hoku_vista.rect, 
-            escenario_actual.npcs
-        )
+        self.hud_hoku.dibujar(self.pantalla)
+        self.vista_dialogos.dibujar(self.pantalla, self.hoku_vista.rect, escenario_actual.npcs)
 
     # ==================================================
-    # TRANSICIONES
+    # MÉTODOS AUXILIARES
     # ==================================================
     def controlar_transiciones(self):
+        self.gestor_escenarios.verificar_transicion(self.hoku_vista)
 
-        self.gestor_escenarios.verificar_transicion(
-            self.hoku_vista
-        )
-
-    # ==================================================
-    # INTERACCIONES
-    # ==================================================
     def verificar_interacciones(self):
-        """ 🔧 NUEVO: Verifica colisión con NPCs y gatilla sus diálogos lógicos """
-        
         escenario_actual = self.gestor_escenarios.escenario_actual
-        
-        # 1. Contamos enemigos vivos en el nivel
         enemigos_vivos = sum(1 for enemigo in escenario_actual.enemigos if enemigo.modelo.estaVivo())
         
-        # 2. Recorremos los NPCs del escenario
         for npc in escenario_actual.npcs:
-            
-            # Ampliamos el rectángulo lógico igual que hicimos para lo visual
             area_interaccion = npc.rect.inflate(250, 250)
-            
-            # 3. Si Hoku está en el área de interacción
             if self.hoku_vista.rect.colliderect(area_interaccion):
-                
-                # 4. Inicia o avanza el diálogo en el modelo
                 if hasattr(npc, 'modelo') and npc.modelo:
                     npc.modelo.interactuar(self.hoku_logico, enemigos_vivos)
 
@@ -474,12 +284,8 @@ class GameController:
 # MAIN
 # ======================================================
 def main():
-
     juego = GameController()
-
     juego.ejecutar()
 
-
 if __name__ == "__main__":
-
     main()
