@@ -7,7 +7,7 @@ class Hoku(Personaje):
     
     def __init__(self):
         super().__init__("Hoku")
-        self.vida_maxima = 100000 #puede incrementar su vida maxima 
+        self.vida_maxima = 4 #puede incrementar su vida maxima 
         self._vida = self.vida_maxima #vida actual 
         self.ataque = 1 #hace 1 de danio 
         self.habilidades = [] #ataque que puede utilizarse cuando derrote el primer jefe (fuego)

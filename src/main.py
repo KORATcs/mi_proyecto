@@ -133,7 +133,7 @@ class GameController:
                 else:
                     self.dibujar_juego()
             elif self.estado_juego == "MINIJUEGO":  
-                # 🎮 AL GANAR, SALTA A NUESTRO FLUJO FINAL DE TEXTOS ELEGANTES
+                # AL GANAR, SALTA A NUESTRO FLUJO FINAL DE TEXTOS ELEGANTES
                 self.minijuego.actualizar(self.dt, self.mostrar_texto_victoria)
                 self.minijuego.dibujar()
 
@@ -202,7 +202,7 @@ class GameController:
             
             self.hoku_logico = Hoku()
             self.hoku_vista.modelo = self.hoku_logico
-            self.hud_hoku.modelo = self.hoku_logico
+            self.hud_hoku.personaje = self.hoku_logico
             
             self.gestor_escenarios = GestorEscenarios()
             self.gestor_escenarios.cargar_escenario(1)
@@ -278,6 +278,7 @@ class GameController:
                 self.hoku_vista.rect.x = pos_x
                 self.hoku_vista.rect.y = pos_y
                 self.hoku_logico.vida = vida_guardada
+                self.hud_hoku.personaje = self.hoku_logico
                 
                 self.estado_juego = "JUGANDO"
             else:
