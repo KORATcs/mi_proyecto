@@ -75,7 +75,8 @@ class GameController:
         self.menu_pausa = MenuPausa(self.ANCHO, self.ALTO) 
         
         self.audio = GestorAudio()
-        self.audio.reproducir_musica("src/assets/musica/ambiente/MainSong-1.mp3", volumen=1.0)
+        self.ruta_musica_actual = "src/assets/musica/menu/MenuSong.mp3"
+        self.audio.reproducir_musica(self.ruta_musica_actual, volumen=1.0)
 
         # =========================
         # INICIALIZACIÓN (JUEGO)
@@ -156,7 +157,8 @@ class GameController:
                 if evento.key == pygame.K_e:
                     escenario = self.gestor_escenarios.escenario_actual
                     if escenario and hasattr(escenario, "templo") and escenario.templo.verificar_cercania(self.hoku_vista.rect):
-                        escenario.templo.interactuar(self) 
+                        self.hoku_logico.curar()
+                        escenario.templo.interactuar(self)
 
                 if evento.key == pygame.K_ESCAPE and self.estado_juego != "REZANDO" and self.estado_juego != "CINEMATICA" and self.estado_juego != "MINIJUEGO":
                     if self.estado_juego == "JUGANDO":
@@ -296,10 +298,20 @@ class GameController:
     # ==================================================
     def actualizar_juego(self):
         escenario_actual = self.gestor_escenarios.escenario_actual
+        escenario_nombre = escenario_actual.__class__.__name__ if escenario_actual else ""
+
+        # 🎵 CAMBIO DE MÚSICA SEGÚN EL ESCENARIO
+        if escenario_nombre == "EscenarioSeis":
+            self.cambiar_bgm("src/assets/musica/combate/FightTheme.mp3", volumen=0.2)
+        else:
+            # Si no está con el jefe, y estamos jugando, que mantenga la música ambiental estándar
+            if self.estado_juego == "JUGANDO":
+                self.cambiar_bgm("src/assets/musica/ambiente/MainSong-1.mp3", volumen=1.0)
+
         if escenario_actual is None:
             return
 
-        # 🎬 CONFIGURACIÓN DE LAS CINEMÁTICAS EN ESCENARIO 12
+        # CONFIGURACIÓN DE LAS CINEMÁTICAS EN ESCENARIO 12
         if escenario_actual.__class__.__name__ == "EscenarioDoce":
             
             # CASO 1: Es la primera vez absoluta que entrás al escenario (Fase 0)
@@ -450,7 +462,7 @@ class GameController:
         self.gestor_cine.dibujar()
 
     # ==================================================
-    # CALLBACKS Y PROGRESO DE CINEMÁTICAS 🎬
+    # CALLBACKS Y PROGRESO DE CINEMÁTICAS
     # ==================================================
     def finalizar_cine_inicial(self):
         self.estado_juego = "JUGANDO"
@@ -458,7 +470,7 @@ class GameController:
         if len(self.acompanantes) > 0:
             self.disparar_cine_final()
 
-    # 🎬 CONFIGURACIÓN DE LA CINEMÁTICA FINAL
+    # CONFIGURACIÓN DE LA CINEMÁTICA FINAL
     def disparar_cine_final(self):
         self.estado_juego = "CINEMATICA"
         
@@ -469,7 +481,6 @@ class GameController:
             "fps": 1,
         }
         
-        # INYECTADO: Mensaje "El fuego fatuo comió a Hoku..." antes de saltar al minijuego
         self.gestor_cine.cargar_desde_spritesheet(
             configuracion_tiras=config_final, 
             callback=self.comenzar_minijuego,
@@ -477,22 +488,32 @@ class GameController:
         )
 
     def comenzar_minijuego(self):
-        """Inicializa y activa el estado del minijuego de tu parcial 🎮"""
+        """Inicializa y activa el estado del minijuego del parcial"""
+        # (Opcional) Si eventualmente le ponés música al minijuego, descomentá la línea de abajo:
+        # self.cambiar_bgm("src/assets/musica/ambiente/musica_minijuego.mp3", volumen=0.8)
+        
         self.minijuego.reiniciar()
         self.estado_juego = "MINIJUEGO"
 
     # ==================================================
-    # 🌟 NUEVA LÓGICA DE FIN DE JUEGO (REEMPLAZA TERMINAR_DEMO)
+    # 🌟 NUEVA LÓGICA DE FIN DE LA DEMO
     # ==================================================
     def mostrar_texto_victoria(self):
         """Dispara la pantalla con el interludio poético de victoria"""
         self.estado_juego = "CINEMATICA"
+        
+        # 🎵 ¡ACÁ ENTRA LA MÚSICA DE LOS CRÉDITOS! 
+        # Arranca justo de fondo mientras se lee este lindo texto.
+        self.cambiar_bgm("src/assets/musica/creditos/CreditSong.mp3", volumen=0.3) # 👈 Cambiá la ruta por tu archivo de créditos
+        
         texto_vic = "El Fuego ha ayudado a Hoku, y pudo alcanzar su objetivo\npara poder seguir con su aventura."
         self.gestor_cine.mostrar_solo_texto(texto_vic, self.mostrar_creditos_finales)
 
     def mostrar_creditos_finales(self):
         """Muestra la pantalla final de agradecimientos"""
         self.estado_juego = "CINEMATICA"
+        
+        # No tocamos la música acá para que siga sonando de corrido la que empezó en el texto anterior
         texto_cred = "¡Muchas gracias por jugar esta Demo!\n\nDiseño y Arte: Camila Simon\nProgramación: Camila Simon\nMusica Original: Santiago Palleres\n\nuwu"
         self.gestor_cine.mostrar_solo_texto(texto_cred, self.regresar_al_menu)
 
@@ -502,11 +523,26 @@ class GameController:
         
         # Reseteamos todo el progreso narrativo
         self.cine_inicial_vista = False
-        self.fase_escenario_12 = 0 # 🌟 Reseteamos la fase a 0 aquí
+        self.fase_escenario_12 = 0 
         self.acompanantes.clear() 
         self.ataques.clear()
         
         self.estado_juego = "MENU"
+        
+        # Al volver al menú principal, restauramos su música original
+        self.cambiar_bgm("src/assets/musica/menu/MenuSong.mp3", volumen=1.0)
+
+    # ==================================================
+    # 🛠️ FUNCIÓN DE CONTROL SEGURO DE AUDIO
+    # ==================================================
+    def cambiar_bgm(self, ruta_cancion, volumen=1.0):
+        """Usa el GestorAudio evitando que la misma canción se reinicie en bucle"""
+        if not hasattr(self, "ruta_musica_actual"):
+            self.ruta_musica_actual = None
+            
+        if self.ruta_musica_actual != ruta_cancion:
+            self.ruta_musica_actual = ruta_cancion
+            self.audio.reproducir_musica(ruta_cancion, volumen)
 
     # ==================================================
     # MÉTODOS AUXILIARES
@@ -538,6 +574,19 @@ class GameController:
             if self.hoku_vista.rect.colliderect(area_interaccion):
                 if hasattr(npc, 'modelo') and npc.modelo:
                     npc.modelo.interactuar(self.hoku_logico, enemigos_vivos)
+
+    # ==================================================
+    # MUSICA Y AUDIOS
+    # ==================================================
+    def cambiar_bgm(self, ruta_cancion, volumen=1.0):
+        """Usa el GestorAudio de forma segura para no reiniciar la misma canción en bucle"""
+        # Creamos una variable fantasma en el init si no existe para registrar la ruta
+        if not hasattr(self, "ruta_musica_actual"):
+            self.ruta_musica_actual = None
+            
+        if self.ruta_musica_actual != ruta_cancion:
+            self.ruta_musica_actual = ruta_cancion
+            self.audio.reproducir_musica(ruta_cancion, volumen)
 
 # ======================================================
 # MAIN
