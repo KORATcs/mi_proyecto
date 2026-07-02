@@ -18,18 +18,11 @@ class Personaje():
         if self._vida > 0:
             return True
         return False
-    
+        
     def atacar(self, Enemigo):
-            # VALIDACIÓN: ¿El atacante está vivo?
-            if not self.estaVivo():
-                raise PersonajeMuertoError(f"{self.nombre} está muerto y no puede atacar.")
-            
-            # VALIDACIÓN: ¿El objetivo está vivo?
-            if not Enemigo.estaVivo():
-                raise ObjetivoMuertoError(f"{Enemigo.nombre} ya está muerto.")
-
-            print(f"{self.nombre} ataca a {Enemigo.nombre}")
-            return Enemigo.recibir_danio(self.ataque)
+            if hasattr(Enemigo, 'estaVivo') and not Enemigo.estaVivo():
+                return 
+            Enemigo.recibir_danio(self.ataque)
 
     def recibir_danio(self, danio):
             # VALIDACIÓN: ¿Daño negativo?

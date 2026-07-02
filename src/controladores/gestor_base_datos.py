@@ -5,6 +5,7 @@ class GestorBaseDatos:
     def __init__(self, ruta_db="hoku_save.db"):
         self.ruta_db = ruta_db
         self.conectar_y_crear_tablas()
+        self.cine_inicial_vista = False
 
     def obtener_conexion(self):
         return sqlite3.connect(self.ruta_db)

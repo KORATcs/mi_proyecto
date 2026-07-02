@@ -23,6 +23,7 @@ from src.controladores.controlador_hoku import ControladorHoku
 from src.controladores.gestor_escenarios import GestorEscenarios
 from src.controladores.gestor_audio.gestor_audio import GestorAudio
 from src.controladores.gestor_base_datos import GestorBaseDatos
+from src.controladores.gestor_cinematicas import GestorCinematicas  
 
 class GameController:
 
@@ -88,6 +89,12 @@ class GameController:
         self.ataques = []
         self.acompanantes = [] 
 
+        # =========================
+        # GESTOR DE CINEMÁTICAS
+        # =========================
+        self.gestor_cine = GestorCinematicas(self.pantalla)
+        self.cine_inicial_vista = False  
+
 
     # ==================================================
     # LOOP PRINCIPAL
@@ -110,6 +117,9 @@ class GameController:
             elif self.estado_juego == "REZANDO":
                 self.actualizar_juego()
                 self.dibujar_juego()
+            elif self.estado_juego == "CINEMATICA":  
+                self.gestor_cine.actualizar(self.dt)
+                self.dibujar_juego()
 
             pygame.display.flip()
 
@@ -129,10 +139,10 @@ class GameController:
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_e:
                     escenario = self.gestor_escenarios.escenario_actual
-                    if hasattr(escenario, "templo") and escenario.templo.verificar_cercania(self.hoku_vista.rect):
+                    if escenario and hasattr(escenario, "templo") and escenario.templo.verificar_cercania(self.hoku_vista.rect):
                         escenario.templo.interactuar(self) 
 
-                if evento.key == pygame.K_ESCAPE and self.estado_juego != "REZANDO":
+                if evento.key == pygame.K_ESCAPE and self.estado_juego != "REZANDO" and self.estado_juego != "CINEMATICA":
                     if self.estado_juego == "JUGANDO":
                         self.estado_juego = "PAUSA"
                     elif self.estado_juego == "PAUSA" and not self.menu_pausa.mostrando_confirmacion:
@@ -160,7 +170,6 @@ class GameController:
         self.menu_principal.actualizar_opciones_disponibles(tiene_guardado)
         self.menu_principal.actualizar(self.dt)
         
-        # Opción Nueva Partida confirmada
         if self.menu_principal.iniciar_juego:
             try:
                 with self.bd.obtener_conexion() as conn:
@@ -171,21 +180,17 @@ class GameController:
             except Exception as e:
                 print(f"Error al limpiar la base de datos para nueva partida: {e}")
 
-            # Limpieza profunda de las entidades en la sesión de Pygame
             self.ataques.clear()
             self.acompanantes.clear()
+            self.cine_inicial_vista = False  
             
-            # Instanciamos un Hoku completamente fresco y reiniciamos su vida
             self.hoku_logico = Hoku()
             self.hoku_vista.modelo = self.hoku_logico
             self.hud_hoku.modelo = self.hoku_logico
             
-            # 🔥 REINICIO TOTAL EN CALIENTE DE LOS ESCENARIOS 🔥
-            # Reinstanciamos por completo el gestor para destruir los mapas viejos de la RAM
             self.gestor_escenarios = GestorEscenarios()
             self.gestor_escenarios.cargar_escenario(1)
             
-            # Posicionar en el punto inicial por defecto
             self.hoku_vista.rect.x = 600
             self.hoku_vista.rect.y = 100
             self.hoku_vista.bloqueando_accion = False
@@ -197,7 +202,6 @@ class GameController:
             self.estado_juego = "JUGANDO"
             self.menu_principal.iniciar_juego = False
             
-        # Opción Continuar Partida elegida
         elif self.menu_principal.cargar_partida:
             self.cargar_partida_guardada()
             self.menu_principal.cargar_partida = False
@@ -236,7 +240,6 @@ class GameController:
             self.menu_principal.iniciar_juego = False 
 
     def cargar_partida_guardada(self):
-        """Lee la base de datos, destruye los mapas de la RAM y recrea el estado guardado"""
         try:
             datos = self.bd.cargar_partida()
             if datos:
@@ -253,8 +256,6 @@ class GameController:
                 pos_y = datos.get("pos_y", 100)
                 vida_guardada = datos.get("vida_actual", self.hoku_logico.vida_maxima)
                 
-                # 🔥 REINICIO TOTAL EN CALIENTE DE LOS ESCENARIOS 🔥
-                # Al reinstanciar el controlador, borramos de la memoria cualquier alteración del mapa actual
                 self.gestor_escenarios = GestorEscenarios()
                 self.gestor_escenarios.cargar_escenario(escenario_id)
                 
@@ -280,6 +281,30 @@ class GameController:
         escenario_actual = self.gestor_escenarios.escenario_actual
         if escenario_actual is None:
             return
+
+        # 🚨 1. REEMPLAZAR ACÁ: CONFIGURACIÓN DE LA PRIMERA CINEMÁTICA 🎬
+        if escenario_actual.__class__.__name__ == "EscenarioDoce":
+            if not self.cine_inicial_vista and not self.gestor_cine.reproduciendo:
+                self.estado_juego = "CINEMATICA"
+                
+                # Poné las rutas de tus dos tiras acá abajo con sus columnas y filas
+                config_cima = [
+                    {
+                        "ruta": "src/assets/images/cinematica/hoku-cinematica-1.png", 
+                        "columnas": 4, 
+                        "filas": 1,
+                        "fps": 1,
+                    },
+                    {
+                        "ruta": "src/assets/images/cinematica/hoku-cinematica-2.png", 
+                        "columnas": 14,  
+                        "filas": 1,
+                        "fps": 7,
+                    }
+                ]
+                
+                self.gestor_cine.cargar_desde_spritesheet(config_cima, callback=self.finalizar_cine_inicial)
+                return
 
         # 1. Acompañantes
         for npc in escenario_actual.npcs[:]: 
@@ -396,6 +421,37 @@ class GameController:
         self.hud_hoku.dibujar(self.pantalla)
         self.vista_dialogos.dibujar(self.pantalla, self.hoku_vista.rect, escenario_actual.npcs)
 
+        # Se dibuja encima de todo para tapar la pantalla cuando esté activa
+        self.gestor_cine.dibujar()
+
+    # ==================================================
+    # CALLBACKS Y PROGRESO DE CINEMÁTICAS 🎬
+    # ==================================================
+    def finalizar_cine_inicial(self):
+        self.cine_inicial_vista = True
+        self.estado_juego = "JUGANDO"
+        
+        if len(self.acompanantes) > 0:
+            self.disparar_cine_final()
+
+    # 🚨 2. REEMPLAZAR ACÁ: CONFIGURACIÓN DE LA CINEMÁTICA FINAL 🎬
+    def disparar_cine_final(self):
+        self.estado_juego = "CINEMATICA"
+        
+        # Cambiá los datos por la ruta y tamaño de tu tira final
+        config_final = {
+            "ruta": "src/assets/images/cinematica/fuego-fatuo-cinematica-Sheet.png", 
+            "columnas": 4, 
+            "filas": 1,
+            "fps": 1,
+        }
+        
+        self.gestor_cine.cargar_desde_spritesheet(config_final, callback=self.terminar_demo)
+
+    def terminar_demo(self):
+        print("¡Demo de Hoku finalizada exitosamente! uwu")
+        self.estado_juego = "MENU"
+
     # ==================================================
     # MÉTODOS AUXILIARES
     # ==================================================
@@ -406,6 +462,11 @@ class GameController:
         escenario_actual = self.gestor_escenarios.escenario_actual
         if escenario_actual is None:
             return
+        
+        if escenario_actual.__class__.__name__ == "EscenarioDoce" and len(self.acompanantes) > 0:
+            self.disparar_cine_final()
+            return
+
         enemigos_vivos = sum(1 for enemigo in escenario_actual.enemigos if enemigo.modelo.estaVivo())
         
         for npc in escenario_actual.npcs:
