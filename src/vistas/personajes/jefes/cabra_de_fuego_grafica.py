@@ -19,9 +19,10 @@ class CabraDeFuegoGrafica(PersonajeGrafico):
         self.cargar_animacion("death", "src/assets/images/personajes/jefes/cabraFuego/cabra-de-fuego-death.png", 18, 200, 200)
         self.cargar_animacion("walk", "src/assets/images/personajes/jefes/cabraFuego/cabra-de-fuego-walk.png", 2, 200, 200)
         self.cargar_animacion("desafiar", "src/assets/images/personajes/jefes/cabraFuego/cabra-de-fuego-desafiar.png", 4, 200, 200)
+        self.cargar_animacion("attack", "src/assets/images/personajes/jefes/cabraFuego/CabradeFuego-Attack-Sheet.png", 5, 200, 200)
         
         try:
-            self.cargar_animacion("attack", "src/assets/images/personajes/jefes/cabraFuego/cabra-de-fuego-attack.png", 5, 200, 200)
+            self.cargar_animacion("attack", "src/assets/images/personajes/jefes/cabraFuego/CabradeFuego-Attack-Sheet.png", 5, 200, 200)
         except:
             self.cargar_animacion("attack", "src/assets/images/personajes/jefes/cabraFuego/cabra-de-fuego-desafiar.png", 4, 200, 200)
 
