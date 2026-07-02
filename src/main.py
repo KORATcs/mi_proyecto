@@ -21,9 +21,10 @@ from src.vistas.menu.menu_pausa import MenuPausa
 # =========================
 from src.controladores.controlador_hoku import ControladorHoku
 from src.controladores.gestor_escenarios import GestorEscenarios
-from src.controladores.gestor_audio.gestor_audio import GestorAudio
+from src.controladores.gestor_audio import GestorAudio
 from src.controladores.gestor_base_datos import GestorBaseDatos
 from src.controladores.gestor_cinematicas import GestorCinematicas  
+from src.controladores.minijuego_grieta import MinijuegoGrieta 
 
 class GameController:
 
@@ -94,6 +95,12 @@ class GameController:
         # =========================
         self.gestor_cine = GestorCinematicas(self.pantalla)
         self.cine_inicial_vista = False  
+        self.fase_escenario_12 = 0
+
+        # =========================
+        # MINIJUEGO GRIETA
+        # =========================
+        self.minijuego = MinijuegoGrieta(self.pantalla)
 
 
     # ==================================================
@@ -119,7 +126,16 @@ class GameController:
                 self.dibujar_juego()
             elif self.estado_juego == "CINEMATICA":  
                 self.gestor_cine.actualizar(self.dt)
-                self.dibujar_juego()
+                # Si estamos mostrando solo un texto del final del juego, no hace falta dibujar el fondo del escenario 12 viejo por atrás
+                if self.gestor_cine.modo_texto and self.gestor_cine.frames == []:
+                    self.pantalla.fill(self.NEGRO)
+                    self.gestor_cine.dibujar()
+                else:
+                    self.dibujar_juego()
+            elif self.estado_juego == "MINIJUEGO":  
+                # 🎮 AL GANAR, SALTA A NUESTRO FLUJO FINAL DE TEXTOS ELEGANTES
+                self.minijuego.actualizar(self.dt, self.mostrar_texto_victoria)
+                self.minijuego.dibujar()
 
             pygame.display.flip()
 
@@ -142,7 +158,7 @@ class GameController:
                     if escenario and hasattr(escenario, "templo") and escenario.templo.verificar_cercania(self.hoku_vista.rect):
                         escenario.templo.interactuar(self) 
 
-                if evento.key == pygame.K_ESCAPE and self.estado_juego != "REZANDO" and self.estado_juego != "CINEMATICA":
+                if evento.key == pygame.K_ESCAPE and self.estado_juego != "REZANDO" and self.estado_juego != "CINEMATICA" and self.estado_juego != "MINIJUEGO":
                     if self.estado_juego == "JUGANDO":
                         self.estado_juego = "PAUSA"
                     elif self.estado_juego == "PAUSA" and not self.menu_pausa.mostrando_confirmacion:
@@ -282,29 +298,34 @@ class GameController:
         if escenario_actual is None:
             return
 
-        # 🚨 1. REEMPLAZAR ACÁ: CONFIGURACIÓN DE LA PRIMERA CINEMÁTICA 🎬
+        # 🎬 CONFIGURACIÓN DE LAS CINEMÁTICAS EN ESCENARIO 12
         if escenario_actual.__class__.__name__ == "EscenarioDoce":
-            if not self.cine_inicial_vista and not self.gestor_cine.reproduciendo:
-                self.estado_juego = "CINEMATICA"
-                
-                # Poné las rutas de tus dos tiras acá abajo con sus columnas y filas
-                config_cima = [
-                    {
-                        "ruta": "src/assets/images/cinematica/hoku-cinematica-1.png", 
-                        "columnas": 4, 
-                        "filas": 1,
-                        "fps": 1,
-                    },
-                    {
-                        "ruta": "src/assets/images/cinematica/hoku-cinematica-2.png", 
-                        "columnas": 14,  
-                        "filas": 1,
-                        "fps": 7,
-                    }
-                ]
-                
-                self.gestor_cine.cargar_desde_spritesheet(config_cima, callback=self.finalizar_cine_inicial)
-                return
+            
+            # CASO 1: Es la primera vez absoluta que entrás al escenario (Fase 0)
+            if self.fase_escenario_12 == 0:
+                if not self.gestor_cine.reproduciendo:
+                    self.fase_escenario_12 = 1 # Pasamos a Fase 1 (Caminando solo/buscando al fuego)
+                    self.cine_inicial_vista = True 
+                    self.estado_juego = "CINEMATICA"
+                    
+                    config_cima = [
+                        {"ruta": "src/assets/images/cinematica/hoku-cinematica-1.png", "columnas": 4, "filas": 1, "fps": 1},
+                        {"ruta": "src/assets/images/cinematica/hoku-cinematica-2.png", "columnas": 14, "filas": 1, "fps": 7}
+                    ]
+                    
+                    self.gestor_cine.cargar_desde_spritesheet(
+                        configuracion_tiras=config_cima, 
+                        callback=self.finalizar_cine_inicial,
+                        texto_interludio="Debo subir hacia allá..."
+                    )
+                    return
+
+            # CASO 2: Ya viste la intro, y regresás con el Fuego Fatuo (Fase 1 y tenés acompañantes)
+            elif self.fase_escenario_12 == 1 and len(self.acompanantes) > 0:
+                if not self.gestor_cine.reproduciendo:
+                    self.fase_escenario_12 = 2 # 🔒 BLOQUEO ABSOLUTO: Pasamos a Fase 2 (Final iniciado)
+                    self.disparar_cine_final()
+                    return
 
         # 1. Acompañantes
         for npc in escenario_actual.npcs[:]: 
@@ -371,7 +392,11 @@ class GameController:
             ataque.update(self.dt)
             for enemigo in enemigos:
                 if ataque.rect.colliderect(enemigo.rect) and enemigo.modelo not in ataque.golpeados:
-                    self.hoku_logico.atacar(enemigo.modelo)
+                    try:
+                        self.hoku_logico.atacar(enemigo.modelo)
+                    except Exception:
+                        pass 
+                    
                     if hasattr(enemigo, "recibir_golpe"):
                         enemigo.recibir_golpe()
                     ataque.golpeados.append(enemigo.modelo)
@@ -421,24 +446,21 @@ class GameController:
         self.hud_hoku.dibujar(self.pantalla)
         self.vista_dialogos.dibujar(self.pantalla, self.hoku_vista.rect, escenario_actual.npcs)
 
-        # Se dibuja encima de todo para tapar la pantalla cuando esté activa
         self.gestor_cine.dibujar()
 
     # ==================================================
     # CALLBACKS Y PROGRESO DE CINEMÁTICAS 🎬
     # ==================================================
     def finalizar_cine_inicial(self):
-        self.cine_inicial_vista = True
         self.estado_juego = "JUGANDO"
         
         if len(self.acompanantes) > 0:
             self.disparar_cine_final()
 
-    # 🚨 2. REEMPLAZAR ACÁ: CONFIGURACIÓN DE LA CINEMÁTICA FINAL 🎬
+    # 🎬 CONFIGURACIÓN DE LA CINEMÁTICA FINAL
     def disparar_cine_final(self):
         self.estado_juego = "CINEMATICA"
         
-        # Cambiá los datos por la ruta y tamaño de tu tira final
         config_final = {
             "ruta": "src/assets/images/cinematica/fuego-fatuo-cinematica-Sheet.png", 
             "columnas": 4, 
@@ -446,17 +468,58 @@ class GameController:
             "fps": 1,
         }
         
-        self.gestor_cine.cargar_desde_spritesheet(config_final, callback=self.terminar_demo)
+        # INYECTADO: Mensaje "El fuego fatuo comió a Hoku..." antes de saltar al minijuego
+        self.gestor_cine.cargar_desde_spritesheet(
+            configuracion_tiras=config_final, 
+            callback=self.comenzar_minijuego,
+            texto_interludio="El Fuego Fatuo comió a Hoku...\nAhora comenzará un nuevo desafío."
+        )
 
-    def terminar_demo(self):
+    def comenzar_minijuego(self):
+        """Inicializa y activa el estado del minijuego de tu parcial 🎮"""
+        self.minijuego.reiniciar()
+        self.estado_juego = "MINIJUEGO"
+
+    # ==================================================
+    # 🌟 NUEVA LÓGICA DE FIN DE JUEGO (REEMPLAZA TERMINAR_DEMO)
+    # ==================================================
+    def mostrar_texto_victoria(self):
+        """Dispara la pantalla con el interludio poético de victoria"""
+        self.estado_juego = "CINEMATICA"
+        texto_vic = "El Fuego ha ayudado a Hoku, y pudo alcanzar su objetivo\npara poder seguir con su aventura."
+        self.gestor_cine.mostrar_solo_texto(texto_vic, self.mostrar_creditos_finales)
+
+    def mostrar_creditos_finales(self):
+        """Muestra la pantalla final de agradecimientos"""
+        self.estado_juego = "CINEMATICA"
+        texto_cred = "¡Muchas gracias por jugar esta Demo!\n\nDiseño y Arte: Camila Simon\nProgramación: Camila Simon\nMusica Original: Santiago Palleres\n\nuwu"
+        self.gestor_cine.mostrar_solo_texto(texto_cred, self.regresar_al_menu)
+
+    def regresar_al_menu(self):
+        """Devuelve limpio al jugador al Menú Principal en lugar de romper el ejecutable"""
         print("¡Demo de Hoku finalizada exitosamente! uwu")
+        
+        # Reseteamos todo el progreso narrativo
+        self.cine_inicial_vista = False
+        self.fase_escenario_12 = 0 # 🌟 Reseteamos la fase a 0 aquí
+        self.acompanantes.clear() 
+        self.ataques.clear()
+        
         self.estado_juego = "MENU"
 
     # ==================================================
     # MÉTODOS AUXILIARES
     # ==================================================
     def controlar_transiciones(self):
+        # Guardamos cuál era el escenario antes de verificar la transición
+        escenario_anterior = self.gestor_escenarios.escenario_actual.__class__.__name__ if self.gestor_escenarios.escenario_actual else None
+        
         self.gestor_escenarios.verificar_transicion(self.hoku_vista)
+        
+        # Si el escenario cambió, reiniciamos la protección del cine para que pueda volver a reproducirse
+        escenario_nuevo = self.gestor_escenarios.escenario_actual.__class__.__name__ if self.gestor_escenarios.escenario_actual else None
+        if escenario_anterior != escenario_nuevo and escenario_nuevo == "EscenarioDoce":
+            self.cine_inicial_vista = False
 
     def verificar_interacciones(self):
         escenario_actual = self.gestor_escenarios.escenario_actual

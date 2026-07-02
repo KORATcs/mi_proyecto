@@ -30,8 +30,8 @@ class ControladorHoku:
         teclas = pygame.key.get_pressed()
 
         dx, dy = 0, 0
-        velocidad = 5
-        velocidad_2 = 5
+        velocidad = 15
+        velocidad_2 = 15
 
         if teclas[pygame.K_w]:
             dy -= velocidad_2
