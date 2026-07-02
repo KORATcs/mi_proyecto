@@ -1,6 +1,5 @@
 import pygame
 
-
 class Escenario:
 
     def __init__(self, ancho, alto):
@@ -43,15 +42,11 @@ class Escenario:
     def actualizar(self, jugador=None):
         """
         Actualiza todas las entidades del escenario.
-        Recibe opcionalmente al jugador (Hoku) para que los enemigos 
-        puedan ejecutar su IA de persecución o ataque.
         """
         for enemigo in self.enemigos:
-            # Intentamos pasarle el jugador. Si el enemigo acepta el parámetro, lo usará.
             try:
                 enemigo.actualizar(jugador)
             except TypeError:
-                # Por si acaso algún enemigo viejo quedó sin el parámetro jugador
                 enemigo.actualizar()
         
         for plataforma in self.plataformas:
@@ -59,15 +54,19 @@ class Escenario:
                 plataforma.update()
         
         for npc in self.npcs:
-            # Si tu actualizar pide un jugador, se lo pasamos
             npc.actualizar(jugador)
-
+            
     # =========================
     # DIBUJAR
     # =========================
-    def dibujar(self, pantalla):
+    def dibujar(self, pantalla, hoku_rect=None, estado_juego="JUGANDO"):
 
         pantalla.blit(self.fondo, (0, 0))
+        
+        # Si este escenario tiene un templo, lo dibujamos por detrás de Hoku
+        if hasattr(self, 'templo') and self.templo:
+            if hoku_rect: # Nos aseguramos de tener el rect de Hoku
+                self.templo.dibujar(pantalla, hoku_rect, estado_juego)
 
         for plataforma in self.plataformas:
             plataforma.dibujar(pantalla)
@@ -89,6 +88,7 @@ class Escenario:
     
     def crear_npcs(self):
         pass
+
     # =========================
     # DETECCIÓN DE SALIDA
     # =========================
@@ -107,5 +107,3 @@ class Escenario:
             return ("inferior", self.salida_inferior)
 
         return (None, None)
-
-    

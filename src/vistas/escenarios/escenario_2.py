@@ -2,6 +2,7 @@ import pygame
 from src.vistas.escenarios.escenario import Escenario
 from src.vistas.escenarios.mapa_escenario import MAPA_ESCENARIO_2
 from src.vistas.plataformas.plataforma_grafica import PlataformaGrafica
+from src.vistas.objetos.templo_tsumi import TemploTsumi
 
 # ==============================================================
 # ESCENARIO 2 — izquierda -> 1 | derecha -> 3
@@ -20,9 +21,9 @@ class EscenarioDos(Escenario):
 
         self.crear_plataformas()
         self.crear_enemigos()
+        self.templo = TemploTsumi(x=355, y=120, id_escenario=2)
 
     def crear_plataformas(self):
-
         TAM_BLOQUE = 20
 
         for fila, linea in enumerate(MAPA_ESCENARIO_2):
@@ -43,4 +44,5 @@ class EscenarioDos(Escenario):
 
                     self.plataformas.append(plataforma)
 
-    def crear_enemigos(self): pass
+    def crear_enemigos(self): 
+        pass

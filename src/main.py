@@ -14,6 +14,7 @@ from src.vistas.ataques.zarpazo_grafico import ZarpazoGrafico
 from src.vistas.ui.hud import HUD
 from src.vistas.ui.vista_dialogos import VistaDialogos
 from src.vistas.menu.menu_principal_grafico import MenuPrincipalGrafico
+from src.vistas.menu.menu_pausa import MenuPausa 
 
 # =========================
 # CONTROLADORES
@@ -21,6 +22,7 @@ from src.vistas.menu.menu_principal_grafico import MenuPrincipalGrafico
 from src.controladores.controlador_hoku import ControladorHoku
 from src.controladores.gestor_escenarios import GestorEscenarios
 from src.controladores.gestor_audio.gestor_audio import GestorAudio
+from src.controladores.gestor_base_datos import GestorBaseDatos
 
 class GameController:
 
@@ -39,15 +41,12 @@ class GameController:
         self.FPS = 100
 
         self.NEGRO = (0, 0, 0)
-        self.BLANCO = (255, 255, 255) # Útil para textos
+        self.BLANCO = (255, 255, 255) 
 
         # =========================
         # VENTANA
         # =========================
-        self.pantalla = pygame.display.set_mode(
-            (self.ANCHO, self.ALTO)
-        )
-
+        self.pantalla = pygame.display.set_mode((self.ANCHO, self.ALTO))
         pygame.display.set_caption("Hoku")
 
         # =========================
@@ -55,29 +54,26 @@ class GameController:
         # =========================
         self.clock = pygame.time.Clock()
         self.ejecutando = True
-
-        # 🔧 NUEVO: MAQUINA DE ESTADOS (Puede ser "MENU", "JUGANDO", etc.)
         self.estado_juego = "MENU"
 
         # =========================
         # LÍMITES PANTALLA
         # =========================
-        self.limite_pantalla = pygame.Rect(
-            0,
-            0,
-            self.ANCHO,
-            self.ALTO
-        )
+        self.limite_pantalla = pygame.Rect(0, 0, self.ANCHO, self.ALTO)
+
+        # =========================
+        # INICIALIZACIÓN (BASE DE DATOS)
+        # =========================
+        self.bd = GestorBaseDatos()
 
         # =========================
         # INICIALIZACIÓN (MENÚ Y AUDIO)
         # =========================
-        # 🔧 IMPORTANTE: Acá instanciarás tu menú real cuando lo crees
         self.menu_principal = MenuPrincipalGrafico(self.ANCHO, self.ALTO)
+        self.menu_pausa = MenuPausa(self.ANCHO, self.ALTO) 
         
         self.audio = GestorAudio()
         self.audio.reproducir_musica("src/assets/musica/ambiente/MainSong-1.mp3", volumen=1.0)
-
 
         # =========================
         # INICIALIZACIÓN (JUEGO)
@@ -101,12 +97,17 @@ class GameController:
             self.dt = self.clock.tick(self.FPS)
             self.eventos()
             
-            # NUEVO: Dividimos la lógica según el estado actual
-
             if self.estado_juego == "MENU":
                 self.actualizar_menu()
                 self.dibujar_menu()
             elif self.estado_juego == "JUGANDO":
+                self.actualizar_juego()
+                self.dibujar_juego()
+            elif self.estado_juego == "PAUSA":
+                self.actualizar_pausa()
+                self.dibujar_juego()  
+                self.menu_pausa.dibujar(self.pantalla)  
+            elif self.estado_juego == "REZANDO":
                 self.actualizar_juego()
                 self.dibujar_juego()
 
@@ -119,46 +120,166 @@ class GameController:
     # EVENTOS
     # ==================================================
     def eventos(self):
-        # 1. Obtenemos todas las teclas/clics que se tocaron en este frame
         self.eventos_actuales = pygame.event.get()
 
-        # 2. Revisamos si el jugador cerró la ventana en la cruz (X)
         for evento in self.eventos_actuales:
             if evento.type == pygame.QUIT:
                 self.ejecutando = False
-
-        # ==============================================================
-        # 🔧 3. DISTRIBUCIÓN DE EVENTOS SEGÚN EL ESTADO
-        # ==============================================================
-        if self.estado_juego == "MENU":
-            # Si estamos en el menú, le mandamos las teclas a la clase MenuPrincipal
-            self.menu_principal.procesar_eventos(self.eventos_actuales)
             
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_e:
+                    escenario = self.gestor_escenarios.escenario_actual
+                    if hasattr(escenario, "templo") and escenario.templo.verificar_cercania(self.hoku_vista.rect):
+                        escenario.templo.interactuar(self) 
+
+                if evento.key == pygame.K_ESCAPE and self.estado_juego != "REZANDO":
+                    if self.estado_juego == "JUGANDO":
+                        self.estado_juego = "PAUSA"
+                    elif self.estado_juego == "PAUSA" and not self.menu_pausa.mostrando_confirmacion:
+                        self.estado_juego = "JUGANDO"
+
+        if self.estado_juego == "MENU":
+            self.menu_principal.procesar_eventos(self.eventos_actuales)
         elif self.estado_juego == "JUGANDO":
-            # Si estamos jugando, le mandamos las teclas al controlador de Hoku
             self.controlador_hoku.procesar_eventos(self.eventos_actuales)
+        elif self.estado_juego == "PAUSA":
+            self.menu_pausa.procesar_eventos(self.eventos_actuales)
 
     # ==================================================
-    # LÓGICA Y DIBUJO: MENÚ
+    # LÓGICA Y DIBUJO: MENÚ PRINCIPAL
     # ==================================================
     def actualizar_menu(self):
+        tiene_guardado = False
+        try:
+            partida = self.bd.cargar_partida()
+            if partida is not None:
+                tiene_guardado = True
+        except Exception as e:
+            print(f"Error al verificar guardado en el menú: {e}")
+            
+        self.menu_principal.actualizar_opciones_disponibles(tiene_guardado)
         self.menu_principal.actualizar(self.dt)
+        
+        # Opción Nueva Partida confirmada
         if self.menu_principal.iniciar_juego:
+            try:
+                with self.bd.obtener_conexion() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("DELETE FROM partida")
+                    cursor.execute("DELETE FROM jefes_derrotados")
+                    conn.commit()
+            except Exception as e:
+                print(f"Error al limpiar la base de datos para nueva partida: {e}")
+
+            # Limpieza profunda de las entidades en la sesión de Pygame
+            self.ataques.clear()
+            self.acompanantes.clear()
+            
+            # Instanciamos un Hoku completamente fresco y reiniciamos su vida
+            self.hoku_logico = Hoku()
+            self.hoku_vista.modelo = self.hoku_logico
+            self.hud_hoku.modelo = self.hoku_logico
+            
+            # 🔥 REINICIO TOTAL EN CALIENTE DE LOS ESCENARIOS 🔥
+            # Reinstanciamos por completo el gestor para destruir los mapas viejos de la RAM
+            self.gestor_escenarios = GestorEscenarios()
+            self.gestor_escenarios.cargar_escenario(1)
+            
+            # Posicionar en el punto inicial por defecto
+            self.hoku_vista.rect.x = 600
+            self.hoku_vista.rect.y = 100
+            self.hoku_vista.bloqueando_accion = False
+            self.hoku_vista.invulnerable = False
+            self.hoku_vista.tiempo_danio = 0
+            if hasattr(self.hoku_vista, "cambiar_animacion"):
+                self.hoku_vista.cambiar_animacion("quieto")
+                
             self.estado_juego = "JUGANDO"
+            self.menu_principal.iniciar_juego = False
+            
+        # Opción Continuar Partida elegida
+        elif self.menu_principal.cargar_partida:
+            self.cargar_partida_guardada()
+            self.menu_principal.cargar_partida = False
 
     def dibujar_menu(self):
         self.menu_principal.dibujar(self.pantalla)
 
-        self.pantalla.fill(self.NEGRO)
-        self.menu_principal.dibujar(self.pantalla)
+    # ==================================================
+    # LÓGICA: MENÚ DE PAUSA
+    # ==================================================
+    def actualizar_pausa(self):
+        if self.menu_pausa.continuar_juego:
+            self.estado_juego = "JUGANDO"
+            self.menu_pausa.continuar_juego = False
+            
+        elif self.menu_pausa.cargar_checkpoint:
+            self.cargar_partida_guardada()
+            self.menu_pausa.cargar_checkpoint = False
+            
+        elif self.menu_pausa.retornar_al_menu:
+            self.estado_juego = "MENU"
+            
+            tiene_guardado = False
+            try:
+                partida = self.bd.cargar_partida()
+                if partida is not None:
+                    tiene_guardado = True
+            except Exception:
+                pass
+            self.menu_principal.actualizar_opciones_disponibles(tiene_guardado)
+            
+            self.menu_pausa.retornar_al_menu = False 
+            self.menu_pausa.continuar_juego = False
+            self.menu_pausa.cargar_checkpoint = False
+            self.menu_pausa.indice_seleccionado = 0
+            self.menu_principal.iniciar_juego = False 
 
+    def cargar_partida_guardada(self):
+        """Lee la base de datos, destruye los mapas de la RAM y recrea el estado guardado"""
+        try:
+            datos = self.bd.cargar_partida()
+            if datos:
+                self.ataques.clear()
+                self.acompanantes.clear()
+                self.hoku_vista.bloqueando_accion = False
+                self.hoku_vista.invulnerable = False
+                self.hoku_vista.tiempo_danio = 0
+                if hasattr(self.hoku_vista, "cambiar_animacion"):
+                    self.hoku_vista.cambiar_animacion("quieto")
+
+                escenario_id = datos.get("escenario_id", 1)
+                pos_x = datos.get("pos_x", 600)
+                pos_y = datos.get("pos_y", 100)
+                vida_guardada = datos.get("vida_actual", self.hoku_logico.vida_maxima)
+                
+                # 🔥 REINICIO TOTAL EN CALIENTE DE LOS ESCENARIOS 🔥
+                # Al reinstanciar el controlador, borramos de la memoria cualquier alteración del mapa actual
+                self.gestor_escenarios = GestorEscenarios()
+                self.gestor_escenarios.cargar_escenario(escenario_id)
+                
+                self.hoku_vista.rect.x = pos_x
+                self.hoku_vista.rect.y = pos_y
+                self.hoku_logico.vida = vida_guardada
+                
+                self.estado_juego = "JUGANDO"
+            else:
+                self.gestor_escenarios = GestorEscenarios()
+                self.gestor_escenarios.cargar_escenario(1)
+                self.estado_juego = "JUGANDO"
+        except Exception as e:
+            print(f"Error crítico al cargar partida: {e}")
+            self.gestor_escenarios = GestorEscenarios()
+            self.gestor_escenarios.cargar_escenario(1)
+            self.estado_juego = "JUGANDO"
 
     # ==================================================
-    # LÓGICA: JUEGO (Tu código original de actualizar)
+    # LÓGICA: JUEGO 
     # ==================================================
     def actualizar_juego(self):
-        
         escenario_actual = self.gestor_escenarios.escenario_actual
+        if escenario_actual is None:
+            return
 
         # 1. Acompañantes
         for npc in escenario_actual.npcs[:]: 
@@ -177,7 +298,7 @@ class GameController:
             destino_y = self.hoku_vista.rect.top - 25 
             
             ac.rect.centerx += (destino_x - ac.rect.centerx) * 0.08
-            ac.rect.centery += (destino_y - ac.rect.centery) * 0.08
+            ac.rect.centery += (destino_y - ac.rect.centery) * 0.04
 
             if escenario_actual.__class__.__name__ == "EscenarioDoce":
                 destino_y = -100 
@@ -187,17 +308,27 @@ class GameController:
 
         # 2. Inputs Hoku
         enemigos = escenario_actual.enemigos
-        dx, dy = self.controlador_hoku.obtener_movimiento()
-        esta_atacando = self.controlador_hoku.atacando
-        saltando = self.controlador_hoku.saltando
-        interactuando = self.controlador_hoku.interactuando
+        
+        if self.estado_juego == "REZANDO":
+            dx, dy = 0, 0
+            esta_atacando = False
+            saltando = False
+            interactuando = self.controlador_hoku.interactuando
+        else:
+            dx, dy = self.controlador_hoku.obtener_movimiento()
+            esta_atacando = self.controlador_hoku.atacando
+            saltando = self.controlador_hoku.saltando
+            interactuando = self.controlador_hoku.interactuando
         
         if interactuando:
             self.verificar_interacciones()
 
         # 3. Update Hoku y Escenario
         self.hoku_vista.update(dx, dy, esta_atacando, saltando, self.dt, self.limite_pantalla, enemigos, escenario=escenario_actual)
-        escenario_actual.actualizar(self.hoku_vista)
+        escenario_actual.actualizar(self.hoku_vista)    
+
+        if hasattr(escenario_actual, "templo") and escenario_actual.templo:
+            escenario_actual.templo.actualizar(self.dt)
 
         for enemigo in escenario_actual.enemigos:
             if hasattr(enemigo, 'modelo') and enemigo.modelo.__class__.__name__ == "CabraDeFuego":
@@ -240,13 +371,15 @@ class GameController:
         self.controlar_transiciones()
 
     # ==================================================
-    # DIBUJO: JUEGO (Tu código original de dibujar)
+    # DIBUJO: JUEGO 
     # ==================================================
     def dibujar_juego(self):
         self.pantalla.fill(self.NEGRO)
         escenario_actual = self.gestor_escenarios.escenario_actual
+        if escenario_actual is None:
+            return
 
-        escenario_actual.dibujar(self.pantalla)
+        escenario_actual.dibujar(self.pantalla, self.hoku_vista.rect, self.estado_juego)
 
         for enemigo in escenario_actual.enemigos:
             enemigo.dibujar(self.pantalla)
@@ -271,6 +404,8 @@ class GameController:
 
     def verificar_interacciones(self):
         escenario_actual = self.gestor_escenarios.escenario_actual
+        if escenario_actual is None:
+            return
         enemigos_vivos = sum(1 for enemigo in escenario_actual.enemigos if enemigo.modelo.estaVivo())
         
         for npc in escenario_actual.npcs:
@@ -278,7 +413,6 @@ class GameController:
             if self.hoku_vista.rect.colliderect(area_interaccion):
                 if hasattr(npc, 'modelo') and npc.modelo:
                     npc.modelo.interactuar(self.hoku_logico, enemigos_vivos)
-
 
 # ======================================================
 # MAIN
