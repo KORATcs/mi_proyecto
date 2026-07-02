@@ -77,6 +77,7 @@ class GameController:
         self.audio = GestorAudio()
         self.ruta_musica_actual = "src/assets/musica/menu/MenuSong.mp3"
         self.audio.reproducir_musica(self.ruta_musica_actual, volumen=1.0)
+        self.audio.cargar_efecto("hoku_subir", "src/assets/sonido/personajes/hoku/haku_estoy_cerca.wav")
 
         # =========================
         # INICIALIZACIÓN (JUEGO)
@@ -300,7 +301,7 @@ class GameController:
         escenario_actual = self.gestor_escenarios.escenario_actual
         escenario_nombre = escenario_actual.__class__.__name__ if escenario_actual else ""
 
-        # 🎵 CAMBIO DE MÚSICA SEGÚN EL ESCENARIO
+        # CAMBIO DE MÚSICA SEGÚN EL ESCENARIO
         if escenario_nombre == "EscenarioSeis":
             self.cambiar_bgm("src/assets/musica/combate/FightTheme.mp3", volumen=0.2)
         else:
@@ -325,18 +326,20 @@ class GameController:
                         {"ruta": "src/assets/images/cinematica/hoku-cinematica-1.png", "columnas": 4, "filas": 1, "fps": 1},
                         {"ruta": "src/assets/images/cinematica/hoku-cinematica-2.png", "columnas": 14, "filas": 1, "fps": 7}
                     ]
-                    
+
+                    self.audio.reproducir_efecto("hoku_subir", volumen=1.0)
+
                     self.gestor_cine.cargar_desde_spritesheet(
                         configuracion_tiras=config_cima, 
                         callback=self.finalizar_cine_inicial,
                         texto_interludio="Debo subir hacia allá..."
                     )
                     return
-
+                
             # CASO 2: Ya viste la intro, y regresás con el Fuego Fatuo (Fase 1 y tenés acompañantes)
             elif self.fase_escenario_12 == 1 and len(self.acompanantes) > 0:
                 if not self.gestor_cine.reproduciendo:
-                    self.fase_escenario_12 = 2 # 🔒 BLOQUEO ABSOLUTO: Pasamos a Fase 2 (Final iniciado)
+                    self.fase_escenario_12 = 2
                     self.disparar_cine_final()
                     return
 
@@ -502,7 +505,7 @@ class GameController:
         """Dispara la pantalla con el interludio poético de victoria"""
         self.estado_juego = "CINEMATICA"
         
-        # 🎵 ¡ACÁ ENTRA LA MÚSICA DE LOS CRÉDITOS! 
+        # ¡ACÁ ENTRA LA MÚSICA DE LOS CRÉDITOS! 
         # Arranca justo de fondo mientras se lee este lindo texto.
         self.cambiar_bgm("src/assets/musica/creditos/CreditSong.mp3", volumen=0.3) # 👈 Cambiá la ruta por tu archivo de créditos
         
