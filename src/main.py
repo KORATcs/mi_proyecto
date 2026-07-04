@@ -536,7 +536,7 @@ class GameController:
         self.cambiar_bgm("src/assets/musica/menu/MenuSong.mp3", volumen=1.0)
 
     # ==================================================
-    # 🛠️ FUNCIÓN DE CONTROL SEGURO DE AUDIO
+    # FUNCIÓN DE CONTROL SEGURO DE AUDIO
     # ==================================================
     def cambiar_bgm(self, ruta_cancion, volumen=1.0):
         """Usa el GestorAudio evitando que la misma canción se reinicie en bucle"""

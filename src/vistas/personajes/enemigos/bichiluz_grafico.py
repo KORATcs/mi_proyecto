@@ -4,7 +4,7 @@ import math
 from src.vistas.personajes.personaje_grafico import PersonajeGrafico
 
 class BichiluzGrafico(PersonajeGrafico):
-
+    
     def __init__(self, x, y, modelo_bichiluz):
 
         super().__init__(x, y, modelo_bichiluz)
@@ -87,7 +87,7 @@ class BichiluzGrafico(PersonajeGrafico):
 
             self.cambiar_estado("idle")
 
-            # flotación senoidal
+            # flotación
             self.tiempo += self.velocidad_flotacion
             
              #esto hace que el personaje tenga un pequeño movimiento de arriba a abajo

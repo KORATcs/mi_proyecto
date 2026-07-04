@@ -138,7 +138,7 @@ class CabraDeFuegoGrafica(PersonajeGrafico):
                     self.velocidad_animacion = 50 
                     self.rect.x += self.velocidad_embestida * self.direccion_embestida
 
-                    # 🔧 CONTROL ESTIMADO PARA SPRITE DE 200x200 (Evita que el dibujo se hunda)
+                    # CONTROL ESTIMADO PARA SPRITE DE 200x200 (Evita que el dibujo se hunda)
                     if self.rect.right > 1150:
                         self.rect.right = 1150  # Freno duro antes del borde real derecho
                     elif self.rect.left < 50:
@@ -184,7 +184,7 @@ class CabraDeFuegoGrafica(PersonajeGrafico):
         if not self.mirando_derecha:
             imagen_final = pygame.transform.flip(imagen_final, True, False)
 
-        # 🔧 CLAVAR EL DIBUJO DENTRO DE LA PANTALLA (Ancho estándar de 1280)
+        #  CLAVAR EL DIBUJO DENTRO DE LA PANTALLA (Ancho estándar de 1280)
         if rect_imagen.right > 1260:
             rect_imagen.right = 1260
         if rect_imagen.left < 20:

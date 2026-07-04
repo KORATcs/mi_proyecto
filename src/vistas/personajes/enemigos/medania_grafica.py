@@ -28,7 +28,7 @@ class MedaniaGrafica(PersonajeGrafico):
         self.pos_y_fija = self.rect.y
 
         # =========================
-        # 🔧 CONFIGURACIÓN DE VELOCIDAD DE FRAMES (Milisegundos)
+        # CONFIGURACIÓN DE VELOCIDAD DE FRAMES (Milisegundos)
         # =========================
         # Modifica estos números a tu gusto para acelerar o ralentizar los sprites uwu
         self.vel_animacion_idle = 400      # Tranquilo cuando no te ve
@@ -53,7 +53,7 @@ class MedaniaGrafica(PersonajeGrafico):
         self.vel_y = 0
         self.gravedad = 0.5
 
-    def actualizar(self, jugador=None): # 🔧 Agregamos jugador=None para recibir a Hoku
+    def actualizar(self, jugador=None): # Agregamos jugador=None para recibir a Hoku
         # Detectar daño por vida del modelo
         if self.modelo._vida < self.vida_anterior:
             self.recibiendo_danio = True

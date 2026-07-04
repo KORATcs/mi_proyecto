@@ -24,12 +24,12 @@ class HibridoGrafico(PersonajeGrafico):
         self.rect = pygame.Rect(0, 0, 80, 80)
         self.rect.center = rect_imagen.center
 
-        # 🔧 GUARDAR PUESTO DE GUARDIA (Para volver si te pierde)
+        #  GUARDAR PUESTO DE GUARDIA (Para volver si te pierde)
         self.x_origen = self.rect.x
         self.y_origen = self.rect.y
 
         # =========================
-        # 🔧 VELOCIDAD DE FRAMES (Milisegundos) uwu
+        #  VELOCIDAD DE FRAMES (Milisegundos) uwu
         # =========================
         self.vel_animacion_alerta = 100    # Velocidad de patitas al perseguir
         self.vel_animacion_ataque = 140    # Velocidad del zarpazo/ataque
@@ -56,7 +56,7 @@ class HibridoGrafico(PersonajeGrafico):
         self.vel_y = 0
         self.gravedad = 0.5
 
-    def actualizar(self, jugador=None): # 🔧 Recibe a Hoku_vista
+    def actualizar(self, jugador=None): #Recibe a Hoku_vista
         # Detectar daño por vida del modelo
         if self.modelo._vida < self.vida_anterior:
             self.recibiendo_danio = True
@@ -102,7 +102,7 @@ class HibridoGrafico(PersonajeGrafico):
                     self.rect.x -= self.velocidad_persecucion
                     
             else:
-                # 🔧 LÓGICA DE RETORNO A SU PUESTO DE LA CÁRCEL
+                # LÓGICA DE RETORNO A SU PUESTO DE LA CÁRCEL
                 distancia_a_origen = self.x_origen - self.rect.x
                 
                 if abs(distancia_a_origen) > self.velocidad_retorno:

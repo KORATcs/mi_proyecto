@@ -17,7 +17,6 @@ class PersonajeGrafico:
         self.timer_animacion = 0
         self.velocidad_animacion = 120
 
-        # 🔧 CAMBIO: Ahora guardamos dinámicamente si el estado actual loopea o no
         self.animacion_loop = True 
 
     def cargar_animacion(self, nombre, ruta, frames, w, h):
@@ -33,7 +32,7 @@ class PersonajeGrafico:
 
         self.animaciones[nombre] = lista_frames
 
-    # 🔧 CAMBIO: Agregamos el parámetro opcional 'loop'
+    # CAMBIO: Agregamos el parámetro opcional 'loop'
     def cambiar_estado(self, nuevo_estado, loop=True):
         if self.estado_actual != nuevo_estado:
             self.estado_actual = nuevo_estado
@@ -51,7 +50,6 @@ class PersonajeGrafico:
             self.timer_animacion = 0
             frames = self.animaciones[self.estado_actual]
 
-            # 🔧 CAMBIO: Ahora usamos la variable dinámica en vez del set hardcodeado
             if not self.animacion_loop:
                 # NO loop (One-shot como la muerte o saltos)
                 if self.indice_frame < len(frames) - 1:
@@ -61,8 +59,6 @@ class PersonajeGrafico:
                 self.indice_frame = (self.indice_frame + 1) % len(frames)
 
             self.image = frames[self.indice_frame]
-
-    # ... (Los métodos mover y dibujar se quedan exactamente igual) ...
 
     def mover(self, dx, dy, limite_pantalla):
         if dx > 0:
